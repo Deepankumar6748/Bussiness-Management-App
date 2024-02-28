@@ -11,7 +11,7 @@
                         <lightning-tab label="Normal" >
                             <!--If there is  records in Normal the below content is displayed-->
                             <div if:true={NormalWtDetails}>
-                                <c-weaver-wt-details wtdetails={NormalWtDetails} account={accountData} type="Normal"></c-weaver-wt-details>
+                                <c-weaver-wt-details wtdetails={NormalWtDetails}  type="Normal"></c-weaver-wt-details>
                             </div>
                             <!--If there is no records in Normal the below content is displayed-->
                             <template if:false={NormalWtDetails}>

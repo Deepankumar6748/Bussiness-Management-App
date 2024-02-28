@@ -9,7 +9,7 @@ export default class WeaverDetails extends LightningElement  {
     @track NormalWtDetails;
     @track BlackWtDetails;
     @track WtDetails6666;
-    accountData;
+
     
 
     @wire(getRecordsTowOrRawMatWt,{recordId: '$recordId'})
@@ -22,15 +22,5 @@ export default class WeaverDetails extends LightningElement  {
          else if (error) {
             console.error(error);
         }
-    } 
-
-    @wire(getRecord, { recordId: '$recordId', fields: [ACCOUNT_OBJECT ] })
-    WiredAccount(data,error){
-        if(data){
-            this.accountData = data;
-        }
-        else if(error){
-            console.error('Error fetching account data:', error);
-        }
-    };    
+    }     
 }
