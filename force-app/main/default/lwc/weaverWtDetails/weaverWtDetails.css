@@ -1,0 +1,6 @@
+.slds-tabs_scoped__content {
+    border: 1px solid #d8dde6; /* Add border for container */
+    border-radius: 0.25rem; /* Add border radius */
+    max-height: 300px; /* Set maximum height for the container */
+    overflow-y: auto; /* Enable vertical scrolling */
+}

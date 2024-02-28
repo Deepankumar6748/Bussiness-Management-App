@@ -1,0 +1,42 @@
+<template>
+    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true"
+        aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open slds-modal_medium slds-modal_small">
+        <div class="slds-modal__container">
+            <header class="slds-modal__header">
+                <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Enter Towel Details</h2>
+            </header>
+            <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                <lightning-card  >
+                    <div style="max-height: 250px; overflow-y: auto; border-radius: 0.25rem; border: 1px solid #d8dde6;">
+                    <table class="slds-table slds-table_bordered slds-table_cell-buffer slds-table_striped " >
+                        <thead>
+                            <tr>
+                                <th>Particulars</th>
+                                <th>Quantity</th>
+                                <th>Weight</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={towels} for:item="towel" for:index="index">
+                                <tr key={towel.id} >
+                                    <td class="slds-text-align_center"><lightning-combobox value={towel.Particulars} options={ParticularsList} onchange={handleChange} data-key={index} data-fields="Particulars"></lightning-combobox></td>
+                                    <td class="slds-text-align_center"><lightning-input type="number" value={towel.Quantity} onchange={handleChange} data-key={index} data-fields="Quantity"></lightning-input></td>
+                                    <td class="slds-text-align_center"><lightning-input type="float" value={towel.Weight} onchange={handleChange} data-key={index} data-fields="Weight"></lightning-input></td>
+                                    <td class="slds-text-align_center"><lightning-button-icon icon-name="utility:delete" alternative-text="Delete row" onclick={deleteTowel} data-key={index}></lightning-button-icon></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                    </div>
+                </lightning-card>
+                <lightning-button label="Add Row" onclick={addRow} style="padding-top: 10px;" ></lightning-button>
+            </div>
+            <footer class="slds-modal__footer">
+                    <lightning-button label="Submit" style="padding: 10px;"  onclick={handleSubmit}></lightning-button>
+                    <lightning-button label="Cancel" style="padding: 10px;"  onclick={handleCancel}></lightning-button>         
+            </footer>
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
