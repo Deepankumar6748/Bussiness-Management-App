@@ -20,11 +20,11 @@ export default class AddTowel extends LightningElement {
         {label :'25x50',value :'25x50'},
     ];
 
-   @track towels = [{id: 1,Particulars:'',Quantity: 0,Weight: 0}];
+   @track towels = [{id: 1,Particulars__c:'',Quantity__c: 0,TowelWeight__c: 0}];
    @api addtoweltab;
    @track id = 1;
    addRow(){
-        this.towels.push({id: this.id+1,Particulars:'',Quantity: 0,Weight: 0});
+        this.towels.push({id: this.id+1,Particulars__c:'',Quantity__c: 0,TowelWeight__c: 0});
         this.id += 1;
    }
 
@@ -43,7 +43,7 @@ export default class AddTowel extends LightningElement {
 
 
     handleSubmit(){
-        const event = new CustomEvent('close',{ detail: { TowelDetails: this.towels}}); //
+        const event = new CustomEvent('submit', { detail: { towels: this.towels } });
         this.dispatchEvent(event);
     }
     handleCancel(){

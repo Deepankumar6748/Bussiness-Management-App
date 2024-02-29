@@ -49,6 +49,6 @@
             <lightning-button variant="success" label="Add Towel" title="Add Towel" onclick={handleClickAddTow} style="padding: 10px; " ></lightning-button>
     </div>
     <!--Floating tab to add Towel-->
-    <c-add-towel if:true={isaddTowel} onclose={closeAddTowTab} oncancel={handleCancel}></c-add-towel>
-    <lightning-button label="Create Date" onclick={handleClickCreateRec} variant="brand" style="padding: 10px; border-radius: 2%;"  ></lightning-button>
+    <c-add-towel if:true={isaddTowel} onsubmit={handleTowelsSubmit} oncancel={handleCancel}></c-add-towel>
+    <lightning-button label="Create Date" onclick={handleClickCreateRec} disabled={disableCreate} variant="brand" style="padding: 10px; border-radius: 2%;"  ></lightning-button>
 </template>
