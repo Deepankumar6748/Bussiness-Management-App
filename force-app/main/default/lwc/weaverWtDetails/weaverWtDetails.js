@@ -40,6 +40,11 @@ export default class WeaverWtDetails extends LightningElement {
             const recordDate = record.Date__c;
             if(recordDate === formattedDate){            // We check if there is record already  created for the current date
                 button.disabled = true;
+                this.dispatchEvent(new ShowToastEvent({
+                    title: "Info",
+                    message: `Today's record is already created.`,
+                    variant: "info"
+                }));
             }
         });
 
@@ -65,10 +70,11 @@ export default class WeaverWtDetails extends LightningElement {
             .then(result=>{
                 this.dispatchEvent(new ShowToastEvent({
                     title: "Info",
-                    message: `Today's record is  created.`,
+                    message: `Today's record is created`,
                     variant: "info"
                 }));
                 button.disabled = true;
+                this.CurrentDateRecId = result.id;
             })
             .catch(error=>{
                 let errorMessage = 'Unknown error';
@@ -88,9 +94,7 @@ export default class WeaverWtDetails extends LightningElement {
         }
     }
 
-    handleClickCreate(event){
-         
-    }
+ 
 
  handleClickAddTow(){
     this.isaddTowel = true;
@@ -100,7 +104,7 @@ export default class WeaverWtDetails extends LightningElement {
  closeAddTowTab(event){
     this.isaddTowel = false;
     this.TowDetails = event.detail.TowelDetails;
-    
+           
  }
  handleCancel(){
     this.isaddTowel = false;
