@@ -8,14 +8,16 @@ export default class WeaverWtDetails extends LightningElement {
     @api wtdetails;               //We get the records of Type "Normal or Black or 6666" for the current account to check for record creation
     @api recordId;              //current Account Id
     @api type;                   //Current account's related TowelDetails object type
-    @track account;              // Current account fields and values
+    @track WtTypeFieldValue;              // Current account WtTypeFieldValue
     @track isaddTowel = false;
     @track CurrentDateRecId;   //Current date record id 
     @track disableCreate;
-    @track WtTypeField; 
-    @track formattedDate
+    @track WtTypeField;         //Initializing this variable to identify the current weightType field to return the pending Weieght so far 
+    @track formattedDate;
+    @track IsOpenPopup = false;   //Initially The Undo Popup is set to be false
+    @track TimeoutRecCreId;
     connectedCallback(){
-        this.WtTypeField = `Pending_Wt_${this.type}__c`;
+        this.WtTypeField = `Pending_Wt_${this.type}__c`;    //By recognizing the weight type we assign the WtTypeField for accessing the values
 
         const currentDate = new Date();
         // Get year, month, and day
@@ -35,28 +37,89 @@ export default class WeaverWtDetails extends LightningElement {
             });
         }
     }
+    message;
 
-    @wire(getRecord, { recordId: '$recordId', fields: '$WtType' })
+    //To get the Current Account Details for Updating and using of the fields to maintain the weight balance and all related field values updation 
+    @wire(getRecord, { recordId: '$recordId', fields: '$this.WtTypeField' })      //WtType
     wiredData({ error, data }) {
         if (data) {
-            this.account = data.fields[this.WtTypeField].value;
+            this.WtTypeFieldValue = data.fields[this.WtTypeField].value;    //From the fetched record we access the value of the field and stored in the variable
         } else if (error) {
-            console.error('Error:', error);
+            let errorMessage = 'Unknown error';
+                if (Array.isArray(error.body)) {
+                    errorMessage = error.body.map(e => e.message).join(', ');
+                } else if (typeof error.body.message === 'string') {
+                    errorMessage = error.body.message;
+                }
+                this.dispatchEvent(new ShowToastEvent({
+                    title: "Error",
+                    message: errorMessage,
+                    variant: "error"
+                }));
         }
     }
 
-    
-    handleClickCreateRec(event){
+    //To create the Current Date Record
+    handleClickCreateRec(){
             const fields = {
                 AccountId__c : this.recordId,
                 Date__c : this.formattedDate,
-                [`DaySpecific${this.type}BalanceWt__c `] : this.account,
+                [`DaySpecific${this.type}BalanceWt__c `] : this.WtTypeFieldValue,
                 DaySpecificDeduction__c : 0,
                 DaySpecificWage__c : 0,
                 TowelWeightType__c : this.type
             };
+
             const recordInput = { apiName: 'TowelOrRawMaterialWeight__c' , fields};
-            createRecord(recordInput)
+            this.IsOpenPopup = true;                //Set the popup open when the button is clicked
+            setTimeout(()=>{                        //Setting the timeout for Undo Popup
+                this.IsOpenPopup = false;
+            },4500);
+            let CurrentDateRecCreId;                // Intialize a variable to Store the id of the timeout function to be executed
+            CurrentDateRecCreId = setTimeout(() => {
+                this.CreateRecorc(recordInput);
+            }, 5000);
+            this.TimeoutRecCreId =  CurrentDateRecCreId; //Assigning the Timeoutid to cancel the particular Timeout
+    }
+   
+    //To Open Pop-up Window for the addition of Towel Details
+    handleClickAddTow(){
+        if (this.disableCreate) {
+            this.isaddTowel = true;
+        }else{
+            this.handleClickCreateRec();
+            this.isaddTowel = true;
+        }
+        
+    }
+
+    //Handling Addition of Towel Details for current Date
+    handleTowelsSubmit(event){
+        this.isaddTowel = false;
+        const towels = event.detail.towels;
+        towels.forEach(record=>{
+            const fields = {
+                TowelOrRawMaterialWeightId__c : this.CurrentDateRecId,
+                Particulars__c : record.Particulars__c,
+                Quantity__c : record.Quantity__c,
+                TowelWeight__c : record.TowelWeight__c
+            };
+            const recordInput = { apiName: 'TowelOrRawMaterialWeightDetail__c' , fields};
+            this.IsOpenPopup = true;                //Set the popup open when the button is clicked
+            setTimeout(()=>{                        //Setting the timeout for Undo Popup
+                this.IsOpenPopup = false;
+            },4500);
+            let CurrentDateRecCreId;                // Intialize a variable to Store the id of the timeout function to be executed
+            CurrentDateRecCreId = setTimeout(() => {
+                this.CreateRecorc(recordInput);
+            }, 5000);
+            this.TimeoutRecCreId =  CurrentDateRecCreId; //Assigning the Timeoutid to cancel the particular Timeout
+        });
+ }
+
+    //Creation of record
+    CreateRecorc(recordInput){
+        createRecord(recordInput)
             .then(result=>{
                 this.dispatchEvent(new ShowToastEvent({
                     title: "Info",
@@ -79,73 +142,25 @@ export default class WeaverWtDetails extends LightningElement {
                     variant: "error"
                 }));
             });
-            
-            
-        
     }
 
- 
+    //Handling Undo Popup for creation of record
+    triggerCancelRecCreation(){
+        this.HandleCancelRecCreation(this.TimeoutRecCreId)
+    }
+    HandleCancelRecCreation(TimeoutRecCreId){
+        clearTimeout(TimeoutRecCreId);
+        this.dispatchEvent(new ShowToastEvent({
+            title: 'Info',
+            message: `Record Creation has been canceled `,
+            varient : 'warning'
+        }));
+        this.IsOpenPopup = false;
+    }
 
- handleClickAddTow(){
-    this.isaddTowel = true;
- }
-
-
- handleTowelsSubmit(event){
-    this.isaddTowel = false;
-    const towels = event.detail.towels;
-    
-
-    towels.forEach(record=>{
-        const fields = {
-            TowelOrRawMaterialWeightId__c : this.CurrentDateRecId,
-            Particulars__c : record.Particulars__c,
-            Quantity__c : record.Quantity__c,
-            TowelWeight__c : record.TowelWeight__c
-        };
-        const recordInput = { apiName: 'TowelOrRawMaterialWeightDetail__c' , fields};
-        createRecord(recordInput)
-            .then(result=>{
-                this.dispatchEvent(new ShowToastEvent({
-                    title: "Info",
-                    message: `Towel Detail's is Updated`,
-                    variant: "info"
-                }));
-            })
-            .catch(error=>{
-                this.dispatchEvent(new ShowToastEvent({
-                    title: "Error",
-                    message: ' Error Occured ',
-                    variant: "error"
-                }));
-            });
-    });
-
-
-    // CreateTowWtDetails(TowDetails,this.CurrentDateRecId)
-    // .then(result=>{
-    //     this.dispatchEvent(new ShowToastEvent({
-    //         title: "Info",
-    //         message: `Towel Details Updated`,
-    //         variant: "info"
-    //     }));
-    // })
-    // .catch(error=>{
-    //     let errorMessage = 'Unknown error';
-    //             if (Array.isArray(error.body)) {
-    //                 errorMessage = error.body.map(e => e.message).join(', ');
-    //             } else if (typeof error.body.message === 'string') {
-    //                 errorMessage = error.body.message;
-    //             }
-    //             this.dispatchEvent(new ShowToastEvent({
-    //                 title: "Error",
-    //                 message: errorMessage,
-    //                 variant: "error"
-    //             }));
-    // });
- }
- handleCancel(){
-    this.isaddTowel = false;
- }
+    //To Close the Add Towel Tab
+    handleCancel(){
+        this.isaddTowel = false;
+    }
 
 }

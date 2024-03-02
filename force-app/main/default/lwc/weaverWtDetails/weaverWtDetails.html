@@ -44,11 +44,17 @@
         </template>
     </div>
     
-    <div class="slds-text-align_center ">
-            <lightning-button variant="success" label="Add RawMaterial" title="Add RawMaterial" onclick={handleClickAddRawMat} style="padding: 10px; " ></lightning-button>
-            <lightning-button variant="success" label="Add Towel" title="Add Towel" onclick={handleClickAddTow} style="padding: 10px; " ></lightning-button>
+    <div class="slds-text-align_center " style="padding: 10px; " >
+            <lightning-button variant="success" label="Add RawMaterial" title="Add RawMaterial" onclick={handleClickAddRawMat} style="padding-right: 7px;"></lightning-button>
+            <lightning-button variant="success" label="Add Towel" title="Add Towel" onclick={handleClickAddTow} style="padding-left: 7px;"></lightning-button>
     </div>
     <!--Floating tab to add Towel-->
     <c-add-towel if:true={isaddTowel} onsubmit={handleTowelsSubmit} oncancel={handleCancel}></c-add-towel>
     <lightning-button label="Create Date" onclick={handleClickCreateRec} disabled={disableCreate} variant="brand" style="padding: 10px; border-radius: 2%;"  ></lightning-button>
+    <!--Popup for Undo  Record Creation-->
+    <section if:true={IsOpenPopup} aria-describedby="dialog-body-id-112" aria-labelledby="dialog-heading-id-117" class="slds-popover slds-popover_full-width" role="dialog" style="margin: 15px; background-color:rgb(33, 240, 85) ">
+        <button class="slds-button slds-button_icon slds-button_icon slds-button_icon-small slds-float_right slds-popover__close"  title="Close dialog">
+        </button>
+        <div class="slds-popover__header ">Record is being created!    <lightning-button label="Undo" onclick={triggerCancelRecCreation}></lightning-button></div>
+    </section>
 </template>

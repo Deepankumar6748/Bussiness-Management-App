@@ -1,5 +1,5 @@
 import { LightningElement,track,api } from 'lwc';
-
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 export default class AddTowel extends LightningElement {
     ParticularsList = [
         {label : '6666',value :'6666'},
@@ -21,8 +21,14 @@ export default class AddTowel extends LightningElement {
     ];
 
    @track towels = [{id: 1,Particulars__c:'',Quantity__c: 0,TowelWeight__c: 0}];
-   @api addtoweltab;
    @track id = 1;
+    
+
+   //We use this method to avoid empty rows in the addTowel Modal Tab
+   get isOnlyoneRowAvailable(){
+        return this.towels.length != 1;
+   }
+
    addRow(){
         this.towels.push({id: this.id+1,Particulars__c:'',Quantity__c: 0,TowelWeight__c: 0});
         this.id += 1;
@@ -41,11 +47,23 @@ export default class AddTowel extends LightningElement {
         this.towels=[...this.towels];
    }
 
-
-    handleSubmit(){
+   handleSubmit() {
+    if (this.isEmptyInputs()) {
+        this.dispatchEvent(new ShowToastEvent({
+            title: "Warning",
+            message: "Fill all the fields",
+            variant: "warning"
+        }));
+    } else {
         const event = new CustomEvent('submit', { detail: { towels: this.towels } });
         this.dispatchEvent(event);
     }
+}
+
+isEmptyInputs() {
+    return this.towels.some(towel => !towel.Particulars__c || !towel.Quantity__c || !towel.TowelWeight__c);  // It iterates all over the towels object and if any missing values then it returns true
+}
+
     handleCancel(){
         const event = new CustomEvent('cancel');
         this.dispatchEvent(event);

@@ -4,6 +4,10 @@
         <div class="slds-modal__container">
             <header class="slds-modal__header">
                 <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Enter Towel Details</h2>
+                <button class="slds-button slds-button_icon slds-modal__close" title="Close" onclick={handleCancel}>
+                    <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                </button>
             </header>
             <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
                 <lightning-card  >
@@ -20,10 +24,10 @@
                         <tbody>
                             <template for:each={towels} for:item="towel" for:index="index">
                                 <tr key={towel.id} >
-                                    <td class="slds-text-align_center"><lightning-combobox value={towel.Particulars__c} options={ParticularsList} onchange={handleChange} data-key={index} data-fields="Particulars__c" ></lightning-combobox></td>
-                                    <td class="slds-text-align_center"><lightning-input type="number" value={towel.Quantity__c} onchange={handleChange} data-key={index}  data-fields="Quantity__c"></lightning-input></td>
-                                    <td class="slds-text-align_center"><lightning-input type="float" value={towel.TowelWeight__c} onchange={handleChange} data-key={index}  data-fields="TowelWeight__c"></lightning-input></td>
-                                    <td class="slds-text-align_center"><lightning-button-icon icon-name="utility:delete" alternative-text="Delete row"  onclick={deleteTowel} data-key={index}></lightning-button-icon></td>
+                                    <td><lightning-combobox value={towel.Particulars__c} options={ParticularsList} onchange={handleChange} required data-key={index} data-fields="Particulars__c" ></lightning-combobox></td>
+                                    <td><lightning-input type="number" value={towel.Quantity__c} onchange={handleChange} data-key={index} required data-fields="Quantity__c"></lightning-input></td>
+                                    <td><lightning-input type="float" value={towel.TowelWeight__c} onchange={handleChange} data-key={index} required data-fields="TowelWeight__c"></lightning-input></td>
+                                    <td><lightning-button-icon if:true={isOnlyoneRowAvailable} icon-name="utility:delete" alternative-text="Delete row"  onclick={deleteTowel} data-key={index}></lightning-button-icon></td>
                                 </tr>
                             </template>
                         </tbody>
@@ -33,8 +37,7 @@
                 <lightning-button label="Add Row" onclick={addRow} style="padding-top: 10px;" ></lightning-button>
             </div>
             <footer class="slds-modal__footer">
-                    <lightning-button label="Submit" style="padding: 10px;"  onclick={handleSubmit}></lightning-button>
-                    <lightning-button label="Cancel" style="padding: 10px;"  onclick={handleCancel}></lightning-button>         
+                    <lightning-button label="Submit" style="padding: 10px;"  onclick={handleSubmit}></lightning-button>         
             </footer>
         </div>
     </section>
