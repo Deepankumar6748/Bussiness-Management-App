@@ -1,6 +1,7 @@
-import { LightningElement,track,api } from 'lwc';
+import { track,api } from 'lwc';
+import LightningModal from 'lightning/modal';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-export default class AddTowel extends LightningElement {
+export default class AddTowModal extends LightningModal {
     ParticularsList = [
         {label : '6666',value :'6666'},
         {label :'35x70',value :'35x70'},
@@ -17,10 +18,9 @@ export default class AddTowel extends LightningElement {
         {label :'70x140(Plain Red)',value :'70x140(Plain Red)'},
         {label :'70x140(Plain)',value :'70x140(Plain)'},
         {label :'75x150',value :'75x150'},
-        {label :'25x50',value :'25x50'},
     ];
 
-   @track towels = [{id: 1,Particulars__c:'',Quantity__c: 0,TowelWeight__c: 0}];
+   @track towels = [{id: 1,Particulars:'',Quantity: 0,TowelWeight: 0}];
    @track id = 1;
     
 
@@ -30,7 +30,7 @@ export default class AddTowel extends LightningElement {
    }
 
    addRow(){
-        this.towels.push({id: this.id+1,Particulars__c:'',Quantity__c: 0,TowelWeight__c: 0});
+        this.towels.push({id: this.id+1,Particulars:'',Quantity: 0,TowelWeight: 0});
         this.id += 1;
    }
 
@@ -55,17 +55,19 @@ export default class AddTowel extends LightningElement {
             variant: "warning"
         }));
     } else {
-        const event = new CustomEvent('submit', { detail: { towels: this.towels } });
+        let total = 0;
+        this.towels.forEach(value=>{
+            total+= parseFloat(value.TowelWeight);
+        });
+        console.log(total);
+        const event = new CustomEvent('submit', { detail: { towels: this.towels, total: total } });
         this.dispatchEvent(event);
+        this.close();
     }
 }
 
 isEmptyInputs() {
-    return this.towels.some(towel => !towel.Particulars__c || !towel.Quantity__c || !towel.TowelWeight__c);  // It iterates all over the towels object and if any missing values then it returns true
+    return this.towels.some(towel => !towel.Particulars || !towel.Quantity || !towel.TowelWeight);  // It iterates all over the towels object and if any missing values then it returns true
 }
 
-    handleCancel(){
-        const event = new CustomEvent('cancel');
-        this.dispatchEvent(event);
-    }
 }

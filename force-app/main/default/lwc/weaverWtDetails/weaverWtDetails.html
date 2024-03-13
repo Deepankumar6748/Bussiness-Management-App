@@ -1,8 +1,8 @@
 <template>
-    <div class="slds-tabs_scoped__content " >
+    <div class="slds-tabs_scoped__content ">
         <template  for:each={wtdetails} for:item="WtDetail">
             <!--For Each Parent Record A Card is created and details are displayed-->
-            <lightning-card key={WtDetail.id} title={WtDetail.Date__c}>
+            <lightning-card key={WtDetail.Id} title={WtDetail.Date__c}>
                 
                 <table class="slds-table slds-table_cell-buffer slds-no-row-hover slds-table_striped">
                     <thead>
@@ -22,7 +22,7 @@
                         <template for:each={WtDetail.TowelOrRawMaterialWeightDetails__r} for:item="Details">
                             <tr key={Details.Id} class="slds-hint-parent">
                                 <td data-label="Partculars">
-                                    <div class="slds-truncate" if:true={Details.RawMaterials__c} title={Details.RawMaterials__c}>{Details.RawMaterials__c}</div>
+                                    <div class="slds-truncate" if:true={Details.RawMaterials__c} title={Details.RawMaterials__c} style="border-color: black;">{Details.RawMaterials__c}</div>
                                     <div class="slds-truncate" if:true={Details.Particulars__c} title={Details.Particulars__c}>{Details.Particulars__c}</div>
                                 </td>
                                 <td data-label="Quantity">
@@ -36,25 +36,29 @@
                         </template>
                     </tbody>
                 </table>
-                <div if:true={WtDetail.DaySpecificNormalBalanceWt__c} style="right:auto">{WtDetail.DaySpecificNormalBalanceWt__c}</div>
-                <div if:true={WtDetail.DaySpecificBlackBalanceWt__c} style="right:auto">{WtDetail.DaySpecificBlackBalanceWt__c}</div>
-                <div if:true={WtDetail.DaySpecific6666BalanceWt__c} style="right:auto">{WtDetail.DaySpecific6666BalanceWt__c}</div>
+                <div class="slds-float_right slds-p-around_large" >
+                    <div if:true={WtDetail.DaySpecificNormalBalanceWt__c} > Balance Weight: {WtDetail.DaySpecificNormalBalanceWt__c}</div>
+                    <div if:true={WtDetail.DaySpecificBlackBalanceWt__c} > Balance Weight: {WtDetail.DaySpecificBlackBalanceWt__c}</div>
+                    <div if:true={WtDetail.DaySpecific6666BalanceWt__c} > Balance Weight: {WtDetail.DaySpecific6666BalanceWt__c}</div>
+                </div>
             </lightning-card>
             
         </template>
     </div>
     
     <div class="slds-text-align_center " style="padding: 10px; " >
-            <lightning-button variant="success" label="Add RawMaterial" title="Add RawMaterial" onclick={handleClickAddRawMat} style="padding-right: 7px;"></lightning-button>
-            <lightning-button variant="success" label="Add Towel" title="Add Towel" onclick={handleClickAddTow} style="padding-left: 7px;"></lightning-button>
+            <lightning-button variant="success" label="Add RawMaterial" title="Add RawMaterial" onclick={handleClickAddRawMat} disabled={disableAddRawMat} style="padding-right: 7px;"></lightning-button>
+            <lightning-button variant="success" label="Add Towel" title="Add Towel" onclick={handleClickAddTow} disabled={disableAddTowel} style="padding-left: 7px;"></lightning-button>
     </div>
-    <!--Floating tab to add Towel-->
-    <c-add-towel if:true={isaddTowel} onsubmit={handleTowelsSubmit} oncancel={handleCancel}></c-add-towel>
     <lightning-button label="Create Date" onclick={handleClickCreateRec} disabled={disableCreate} variant="brand" style="padding: 10px; border-radius: 2%;"  ></lightning-button>
-    <!--Popup for Undo  Record Creation-->
-    <section if:true={IsOpenPopup} aria-describedby="dialog-body-id-112" aria-labelledby="dialog-heading-id-117" class="slds-popover slds-popover_full-width" role="dialog" style="margin: 15px; background-color:rgb(33, 240, 85) ">
+    <!--Popup for Undo CurrentDate Record Creation-->
+    <section if:true={IsOpenPopupCurrDate} aria-describedby="dialog-body-id-112" aria-labelledby="dialog-heading-id-117" class="slds-popover slds-popover_full-width" role="dialog" style="margin: 15px; background-color:rgb(33, 240, 85) ">
+        <div class="slds-popover__header ">Record is being created!    <lightning-button label="Undo" onclick={triggerCancelCurrentDateRecCreation}></lightning-button></div>
+    </section>
+    <!--Popup for Undo Submit Record Creation-->
+    <section if:true={IsOpenPopupSubmit} aria-describedby="dialog-body-id-112" aria-labelledby="dialog-heading-id-117" class="slds-popover slds-popover_full-width" role="dialog" style="margin: 15px; background-color:rgb(33, 240, 85) ">
         <button class="slds-button slds-button_icon slds-button_icon slds-button_icon-small slds-float_right slds-popover__close"  title="Close dialog">
         </button>
-        <div class="slds-popover__header ">Record is being created!    <lightning-button label="Undo" onclick={triggerCancelRecCreation}></lightning-button></div>
+        <div class="slds-popover__header ">Record is being created!    <lightning-button label="Undo" onclick={triggerCancelSubmitRecCreation}></lightning-button></div>
     </section>
 </template>

@@ -1,0 +1,35 @@
+<template>
+    <lightning-modal-header label="Enter RawMaterial Details">
+    </lightning-modal-header>
+    <lightning-modal-body>
+        <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+            <lightning-card  >
+                <div style="max-height: 250px; overflow-y: auto; border-radius: 0.25rem; border: 1px solid #d8dde6;">
+                <table class="slds-table slds-table_bordered slds-table_cell-buffer slds-table_striped " >
+                    <thead>
+                        <tr>
+                            <th>RawMaterial</th>
+                            <th>Weight</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={rawmaterials} for:item="rawmaterial" for:index="index">
+                            <tr key={rawmaterial.id} >
+                                <td><lightning-combobox value={rawmaterial.RawMaterial} options={RawMaterialsList} onchange={handleChangeRawMat} required data-key={index} data-fields="RawMaterial" ></lightning-combobox>
+                                <div class="slds-m-around_small"><h5 data-key={index} data-fields="SelectedRawMatWtAvailable">Availabe Weight : {rawmaterial.SelectedRawMatWtAvailable} Kg's</h5></div></td>
+                                <td><lightning-input type="number" value={rawmaterial.RawMaterialWeight} onchange={handleChange} data-key={index} required data-fields="RawMaterialWeight"></lightning-input></td>
+                                <td><lightning-button-icon if:true={isOnlyoneRowAvailable} icon-name="utility:delete" alternative-text="Delete row"  onclick={deleteRawMaterial} data-key={index}></lightning-button-icon></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+                </div>
+            </lightning-card>
+            <lightning-button label="Add Row" onclick={addRow} style="padding-top: 10px;" ></lightning-button>
+        </div>
+    </lightning-modal-body>
+    <lightning-modal-footer>
+        <lightning-button label="Submit" style="padding: 10px;"  onclick={handleSubmit}></lightning-button>         
+    </lightning-modal-footer>
+</template>

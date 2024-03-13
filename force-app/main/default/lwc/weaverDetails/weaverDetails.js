@@ -10,7 +10,7 @@ export default class WeaverDetails extends LightningElement  {
     @track BlackWtDetails;
     @track WtDetails6666;
 
-    
+
 
     @wire(getRecordsTowOrRawMatWt,{recordId: '$recordId'})
     wiredTowOrRawMatWt({ error, data }) {
