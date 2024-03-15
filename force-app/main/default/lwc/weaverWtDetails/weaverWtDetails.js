@@ -271,6 +271,7 @@ export default class WeaverWtDetails extends LightningElement {
             this.IsOpenPopupSubmit = false;
         },4500);
         let RecCreId;                // Intialize a variable to Store the id of the timeout function to be executed
+        
         RecCreId = setTimeout(() => {
             rawmaterials.forEach(record=>{
                 const fields = {
@@ -286,8 +287,7 @@ export default class WeaverWtDetails extends LightningElement {
                 .catch(error=>{
                     console.error(error);
                 });
-            })
-            .then(result =>{
+            });
                 console.log("RawMaterialsWtPerSubmit1",RawMaterialsWtPerSubmit);
                 const fieldValue = this.WtTypeFieldValue + RawMaterialsWtPerSubmit;
                 console.log("fieldValue:",fieldValue);
@@ -319,8 +319,6 @@ export default class WeaverWtDetails extends LightningElement {
                 .catch(error=>{
                     console.error(error);
                 });
-
-            });
         }, 5000);
         this.TimeoutSubmitRecCreId =  RecCreId; //Assigning the Timeoutid to cancel the particular Timeout
         

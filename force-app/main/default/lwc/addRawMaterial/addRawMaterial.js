@@ -42,24 +42,26 @@ export default class AddRawMatModal extends LightningModal {
    }
 
    handleChangeRawMat(event){                   // we seperately handle this to otify the weights available
-        const {key,fields} = event.currentTarget.dataset;
+        const {key,field1,field2} = event.currentTarget.dataset;
         const value = event.target.value;
-        this.rawmaterials[key][fields] = value;
-        this.findwt(value,key,fields);
+        this.rawmaterials[key][field1] = value;
+        this.rawmaterials[key][field2] = this.findwt(value);
+        console.log("this.rawmaterials[key][field1],this.rawmaterials[key][field2]",this.rawmaterials[key][field1],this.rawmaterials[key][field2]);
    }
 
-   findwt(value,key,fields){                    //go through this later
-    this.RawMatDetails.forEach(record =>{
-        if(record.RawMaterial === value){
-            this.rawmaterials[key][SelectedRawMatWtAvailable] = record.RawMaterialWeight;
-        }
-    })
+   findwt(value){                    //using this function we find the weight limit for the selected raw material    
+    const record = this.RawMatDetails.find(record=> record.RawMaterial === value);
+        if(record){
+            console.log("record.RawMaterial, record.RawMaterialWeight", record.RawMaterial, record.RawMaterialWeight);
+            return record.RawMaterialWeight;
+        }        
    }
 
    handleChange(event){
         const {key,fields} = event.currentTarget.dataset;
         const value = event.target.value;
         this.rawmaterials[key][fields] = value;
+        console.log("key,fields",key,fields);
    }
 
    handleSubmit() {
@@ -69,7 +71,15 @@ export default class AddRawMatModal extends LightningModal {
             message: "Fill all the fields",
             variant: "warning"
         }));
-    } else {
+    }
+    else if(this.isWtLimitExceeded()){
+        this.dispatchEvent(new ShowToastEvent({
+            title: "Warning",
+            message: "Entered Weight is higher than available",
+            variant: "warning"
+        }));
+    }
+     else {
         let total = 0;
         this.rawmaterials.forEach(value=>{
             total+= parseFloat(value.RawMaterialWeight);
@@ -87,5 +97,9 @@ export default class AddRawMatModal extends LightningModal {
 
 isEmptyInputs() {
     return this.rawmaterials.some(rawmaterial => !rawmaterial.RawMaterial ||  !rawmaterial.RawMaterialWeight);  // It iterates all over the rawmaterials object and if any missing values then it returns true
+}
+
+isWtLimitExceeded(){
+   return this.rawmaterials.some(rawmaterial => rawmaterial.RawMaterialWeight > rawmaterial.SelectedRawMatWtAvailable); 
 }
 }

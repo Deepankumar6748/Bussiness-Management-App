@@ -16,8 +16,8 @@
                     <tbody>
                         <template for:each={rawmaterials} for:item="rawmaterial" for:index="index">
                             <tr key={rawmaterial.id} >
-                                <td><lightning-combobox value={rawmaterial.RawMaterial} options={RawMaterialsList} onchange={handleChangeRawMat} required data-key={index} data-fields="RawMaterial" ></lightning-combobox>
-                                <div class="slds-m-around_small"><h5 data-key={index} data-fields="SelectedRawMatWtAvailable">Availabe Weight : {rawmaterial.SelectedRawMatWtAvailable} Kg's</h5></div></td>
+                                <td><lightning-combobox value={rawmaterial.RawMaterial} options={RawMaterialsList} onchange={handleChangeRawMat} required data-key={index} data-field1="RawMaterial" data-field2="SelectedRawMatWtAvailable" ></lightning-combobox>
+                                <div>Availabe Weight : {rawmaterial.SelectedRawMatWtAvailable} Kg's</div></td>
                                 <td><lightning-input type="number" value={rawmaterial.RawMaterialWeight} onchange={handleChange} data-key={index} required data-fields="RawMaterialWeight"></lightning-input></td>
                                 <td><lightning-button-icon if:true={isOnlyoneRowAvailable} icon-name="utility:delete" alternative-text="Delete row"  onclick={deleteRawMaterial} data-key={index}></lightning-button-icon></td>
                             </tr>
