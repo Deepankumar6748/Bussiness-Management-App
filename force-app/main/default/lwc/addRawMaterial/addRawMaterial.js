@@ -1,30 +1,13 @@
-import { track, wire } from 'lwc';
+import { track, wire,api } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import LightningModal from'lightning/modal';
-import getRawMaterialInventory from '@salesforce/apex/getrecords.getRawMaterialInventory';
 export default class AddRawMatModal extends LightningModal {
-   @track rawmaterials = [{id: 1,RawMaterial:'',RawMaterialWeight: 0,SelectedRawMatWtAvailable: 0}];
+   @track rawmaterials = [{id: 1,RawMaterial:'',RawMaterialWeight: 0,SelectedRawMatWtAvailable: 0,RawMatId: ''}];
    @track id = 1; 
-   @track RawMaterialsList;     //Picklist Options for Raw Materials Available
-   @track RawMatDetails;    //To store the weight details
+   @api rawmaterialslist;     //Picklist Options for Raw Materials Available
+   @api rawmatdetails;    //To store the weight details
 
-   @wire (getRawMaterialInventory)                          //Get all the available RawMatreials from Inventory
-   RawMatrecords({data,error}){
-    if(data){
-        this.RawMaterialsList = [];
-        this.RawMatDetails = [];
-        //Here we have to make a picklist Options and an array with rawmaterial name and weights available
-        data.forEach(record=>{
-            this.RawMaterialsList.push({
-                label : record.Name, value : record.Name
-            });
-            this.RawMatDetails.push({
-                RawMaterial : record.Name,
-                RawMaterialWeight : record.Weight__c
-            });
-        })
-    }
-   }                            
+                              
 
    //We use this method to avoid empty rows in the addTowel Modal Tab
    get isOnlyoneRowAvailable(){
@@ -32,7 +15,7 @@ export default class AddRawMatModal extends LightningModal {
    }
 
    addRow(){
-        this.rawmaterials.push({id: this.id+1,RawMaterial:'',RawMaterialWeight: 0,SelectedRawMatWtAvailable: 0});
+        this.rawmaterials.push({id: this.id+1,RawMaterial:'',RawMaterialWeight: 0,SelectedRawMatWtAvailable: 0,RawMatId: ''});
         this.id += 1;
    }
 
@@ -41,19 +24,28 @@ export default class AddRawMatModal extends LightningModal {
         this.rawmaterials.splice(index,1);
    }
 
-   handleChangeRawMat(event){                   // we seperately handle this to otify the weights available
-        const {key,field1,field2} = event.currentTarget.dataset;
+   handleChangeRawMat(event){                   // we seperately handle this to notify the weights available
+        const {key,field1,field2,field3} = event.currentTarget.dataset;
         const value = event.target.value;
         this.rawmaterials[key][field1] = value;
-        this.rawmaterials[key][field2] = this.findwt(value);
-        console.log("this.rawmaterials[key][field1],this.rawmaterials[key][field2]",this.rawmaterials[key][field1],this.rawmaterials[key][field2]);
+        this.rawmaterials[key][field2] = this.findRawMatWt(value);
+        this.rawmaterials[key][field3] = this.findRawMatId(value);
+        console.log("this.rawmaterials[key][field1],this.rawmaterials[key][field2],this.rawmaterials[key][field3]",this.rawmaterials[key][field1],this.rawmaterials[key][field2],this.rawmaterials[key][field3]);
    }
 
-   findwt(value){                    //using this function we find the weight limit for the selected raw material    
-    const record = this.RawMatDetails.find(record=> record.RawMaterial === value);
+   findRawMatWt(value){                    //using this function we find the weight limit for the selected raw material    
+    const record = this.rawmatdetails.find(record=> record.RawMaterial === value);
         if(record){
-            console.log("record.RawMaterial, record.RawMaterialWeight", record.RawMaterial, record.RawMaterialWeight);
-            return record.RawMaterialWeight;
+            console.log("record.RawMaterial, record.AvailableRawMaterialWeight", record.RawMaterial, record.RawMaterialWeight);
+            return record.AvailableRawMaterialWeight;
+        }        
+   }
+
+   findRawMatId(value){                    //using this function we find the Id for the selected raw material record in inventory
+    const record = this.rawmatdetails.find(record=> record.RawMaterial === value);
+        if(record){
+            console.log("record.RawMaterial, record.AvailableRawMaterialWeight,record.id", record.RawMaterial, record.RawMaterialWeight,record.RawMatId);
+            return record.RawMatId;
         }        
    }
 
@@ -87,7 +79,7 @@ export default class AddRawMatModal extends LightningModal {
         console.log(total);
         console.log("total");
         console.log("close");
-        const event = new CustomEvent('submit', { detail: { rawmaterials: this.rawmaterials, total: total } });
+        const event = new CustomEvent('submit', { detail: { rawmaterials: this.rawmaterials} });
         console.log("event initated");
         this.dispatchEvent(event);
         this.close();

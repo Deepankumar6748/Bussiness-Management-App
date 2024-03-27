@@ -17,7 +17,7 @@
                         <tbody>
                             <template for:each={towels} for:item="towel" for:index="index">
                                 <tr key={towel.id} >
-                                    <td><lightning-combobox value={towel.Particulars} options={ParticularsList} onchange={handleChange} required data-key={index} data-fields="Particulars" ></lightning-combobox></td>
+                                    <td><lightning-combobox value={towel.Particulars} options={towparticularslist} onchange={handleChange} required data-key={index} data-fields="Particulars" ></lightning-combobox></td>
                                     <td><lightning-input type="number" value={towel.Quantity} onchange={handleChange} data-key={index} required data-fields="Quantity"></lightning-input></td>
                                     <td><lightning-input type="number" value={towel.TowelWeight} onchange={handleChange} data-key={index} required data-fields="TowelWeight"></lightning-input></td>
                                     <td><lightning-button-icon if:true={isOnlyoneRowAvailable} icon-name="utility:delete" alternative-text="Delete row"  onclick={deleteTowel} data-key={index}></lightning-button-icon></td>

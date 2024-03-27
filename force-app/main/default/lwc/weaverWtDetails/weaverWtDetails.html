@@ -2,9 +2,9 @@
     <div class="slds-tabs_scoped__content ">
         <template  for:each={wtdetails} for:item="WtDetail">
             <!--For Each Parent Record A Card is created and details are displayed-->
-            <lightning-card key={WtDetail.Id} title={WtDetail.Date__c}>
+            <lightning-card class="" key={WtDetail.Id} title={WtDetail.Date__c}>
                 
-                <table class="slds-table slds-table_cell-buffer slds-no-row-hover slds-table_striped">
+                <table class="slds-table slds-table_cell-buffer slds-no-row-hover " >
                     <thead>
                         <tr class="slds-line-height_reset">
                             <th scope="col">
@@ -36,10 +36,10 @@
                         </template>
                     </tbody>
                 </table>
-                <div class="slds-float_right slds-p-around_large" >
-                    <div if:true={WtDetail.DaySpecificNormalBalanceWt__c} > Balance Weight: {WtDetail.DaySpecificNormalBalanceWt__c}</div>
-                    <div if:true={WtDetail.DaySpecificBlackBalanceWt__c} > Balance Weight: {WtDetail.DaySpecificBlackBalanceWt__c}</div>
-                    <div if:true={WtDetail.DaySpecific6666BalanceWt__c} > Balance Weight: {WtDetail.DaySpecific6666BalanceWt__c}</div>
+                <div class="slds-box slds-text-align_center slds-m-around_small" style="font-weight: bold" >
+                    <div  if:true={WtDetail.DaySpecificNormalBalanceWt__c} > <h3>Balance Weight: {WtDetail.DaySpecificNormalBalanceWt__c}</h3></div>
+                    <div  if:true={WtDetail.DaySpecificBlackBalanceWt__c} > <h3>Balance Weight: {WtDetail.DaySpecificBlackBalanceWt__c}</h3></div>
+                    <div  if:true={WtDetail.DaySpecific6666BalanceWt__c} > <h3>Balance Weight: {WtDetail.DaySpecific6666BalanceWt__c}</h3></div>
                 </div>
             </lightning-card>
             
