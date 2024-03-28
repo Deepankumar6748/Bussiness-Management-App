@@ -30,8 +30,10 @@ export default class WeaverWtDetails extends LightningElement {
     @api TowParticularsList;
     @api TowelDetails;
     @api TotalBalanceWage;
-    @api DaySpecificWage ;
+    @track DaySpecificWage ;
     @track ExtraAmtWage;            //This is the ammount that is to be given by the weaver
+    @api SignificantWageBal;      //This is the bal amt that is not tallyed while paying wages that is splitted to each record
+
 
     connectedCallback(){
         this.WtTypeField = `Pending_Wt_${this.type}__c`;    //By recognizing the weight type we assign the WtTypeField for accessing the values
@@ -255,6 +257,10 @@ export default class WeaverWtDetails extends LightningElement {
                             if(TowWage > this.ExtraAmtWage){
                                 TowWage -= this.ExtraAmtWage;
                                 console.log("TowWage update there is TowWage > ExtraAmtWage: TowWage",TowWage);
+                                //We have to dispatch the event to add the extra amt in the significant balance
+                                this.SignificantWageBal +=this.ExtraAmtWage;
+                                const event = new CustomEvent('onupdsignbal',{detail: {significantwagebal : this.SignificantWageBal}});
+                                this.dispatchEvent(event);
                                 this.ExtraAmtWage = 0;
                                 console.log("TowWage update there is TowWage > ExtraAmtWage: this.ExtraAmtWage",this.ExtraAmtWage);
                                 this.UpdateExtAmtChg(this.ExtraAmtWage);
@@ -263,10 +269,17 @@ export default class WeaverWtDetails extends LightningElement {
                                 this.ExtraAmtWage -= TowWage;
                                 console.log("ExtraAmtWage update there is ExtraAmtWage > TowWage: this.ExtraAmtWage",this.ExtraAmtWage);
                                 TowWage = 0;
+                                //Updating the current created towel record as paid because towwage is setteld with extra amt
+                                const amtPaid = {
+                                    Id: result.id,
+                                    //we have to add the amount paid record id to this record to mark as paid
+                                }
                                 console.log("ExtraAmtWage update there is ExtraAmtWage > TowWage: TowWage",TowWage);
                                 this.UpdateExtAmtChg(this.ExtraAmtWage);
                             }
                         }
+
+
                         this.TotalBalanceWage = parseFloat(this.TotalBalanceWage) + parseFloat(TowWage);
                         console.log("TotalBalanceWage After Update",this.TotalBalanceWage);
                         const Accfield = {

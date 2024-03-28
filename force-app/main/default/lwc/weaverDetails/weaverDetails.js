@@ -2,7 +2,7 @@ import { LightningElement,api,track,wire } from 'lwc';
 import { createRecord,getRecord, getFieldValue, updateRecord } from 'lightning/uiRecordApi';
 import SALARY_BALANCE from '@salesforce/schema/Account.SalaryBalance__c'
 import getRecordsTowOrRawMatWt from '@salesforce/apex/WeaverRecordDetails.getRecordsTowOrRawMatWt';
-
+import SIGNIFICANT_AMT from '@salesforce/schema/Account.SignificantWageBal__c'
 export default class WeaverDetails extends LightningElement  {
     @api recordId;
     //For  Weight Details part
@@ -11,6 +11,8 @@ export default class WeaverDetails extends LightningElement  {
     @track WtDetails6666;
     @track TotalBalanceWage;
     @track AllWageDetails;
+    @track SignificantWageBal;      //This is the bal amt that is not tallyed while paying wages that is splitted to each record
+
 
     @wire(getRecordsTowOrRawMatWt,{recordId: '$recordId'})
     wiredTowOrRawMatWt({ error, data }) {
@@ -43,10 +45,11 @@ export default class WeaverDetails extends LightningElement  {
 
     }     
 
-    @wire(getRecord, { recordId: "$recordId", fields: [SALARY_BALANCE] })      
+    @wire(getRecord, { recordId: "$recordId", fields: [SALARY_BALANCE,SIGNIFICANT_AMT] })      
     wiredData({ error, data }) {
         if (data) {
             this.TotalBalanceWage = data.fields['SalaryBalance__c'].value;
+            this.SignificantWageBal = data.fields['SignificantWageBal__c'].value;
         } else if (error) {
             let errorMessage = 'Unknown error';
                 if (Array.isArray(error.body)) {
@@ -60,6 +63,10 @@ export default class WeaverDetails extends LightningElement  {
                     variant: "error"
                 }));
         }
+    }
+
+    HandleSignificantAmtBalUpdate(event){
+        this.SignificantWageBal = event.detail.significantwagebal;
     }
 
 }

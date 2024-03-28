@@ -1,0 +1,33 @@
+<!-- this should be incapsulated in its own component, see https://developer.salesforce.com/docs/component-library/bundle/lightning-modal/documentation -->
+<template>
+    <lightning-modal-header label="Enter Amount Details"></lightning-modal-header>
+    <lightning-modal-body>
+        <lightning-combobox
+          name="progress"
+          label="Amount Type"
+          placeholder="Select Type"
+          options={options}
+          required
+          onchange={handleChangeType} 
+          class="slds-p-around_small"
+        ></lightning-combobox>
+        <lightning-input 
+          type="number"
+          label="Amount"
+          required
+          onchange={handleAmtchange}
+          class="slds-p-around_small"
+        ></lightning-input>
+    </lightning-modal-body>
+    <lightning-modal-footer>
+        <lightning-button 
+          variant="success"
+          label="Done" 
+          title="Done" 
+          type="button"
+          onclick={handleClickDone} 
+          class="slds-m-around_medium"
+        ></lightning-button>
+    </lightning-modal-footer>
+</template>
+  
