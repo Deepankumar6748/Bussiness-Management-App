@@ -55,13 +55,15 @@
                         </template>
                     </tbody>
                 </table>
-                <p slot="footer">Day Specfic Wage:{WageDetail.DaySpecificWage__c}  Day Specific Deduction:{WageDetail.DaySpecificDeduction__c}</p>
+                <p slot="footer" style="font-weight: bold">Day Specfic Wage: {WageDetail.DaySpecificWage__c}   &nbsp; &nbsp;  Day Specific Deduction: {WageDetail.DaySpecificDeduction__c}</p>
             </lightning-card>
         </template>
     </div>
-    <lightning-button class="slds-p-around_medium" label="Pay Wage" onclick={handleClickWagePay}  variant="brand" style="padding: 10px; border-radius: 2%;"></lightning-button>
+    <lightning-button-group class="slds-align_absolute-center">
+        <lightning-button class="slds-m-around_medium "  label="Pay Wage-ExtAmt" disabled={isExtraAmtlimitReached} onclick={handleClickExtAmtWagePay}  variant="brand" style="padding: 10px; border-radius: 2%;"></lightning-button>
+        <lightning-button class="slds-m-around_medium "  label="Calculate Salary" onclick={handleCalculateSalary}  variant="brand" style="padding: 10px; border-radius: 2%;"></lightning-button>
+    </lightning-button-group>
         <section if:true={IsUndopopover} aria-describedby="dialog-body-id-112" aria-labelledby="dialog-heading-id-117" class="slds-popover slds-nubbib_left slds-popover_full-width" role="dialog" style="margin: 15px; background-color:rgb(33, 240, 85) ">
             <div class="slds-popover__header ">Amount is being Updated!    <lightning-button label="Undo" onclick={triggerCancelAmountRecCreation}></lightning-button></div>
         </section>
 </template>
-

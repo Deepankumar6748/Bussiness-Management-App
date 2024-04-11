@@ -4,18 +4,19 @@
     <lightning-modal-body>
         <lightning-combobox
           name="progress"
-          label="Amount Type"
-          placeholder="Select Type"
+          label="Payment Mode"
+          placeholder="Select Mode Of Pay"
           options={options}
           required
-          onchange={handleChangeType} 
+          onchange={handleChangeModeOfPay} 
           class="slds-p-around_small"
         ></lightning-combobox>
         <lightning-input 
           type="number"
           label="Amount"
           required
-          onblur={handleAmtchange}
+          value={Amount}
+          onchange={handleAmtchange}
           class="slds-p-around_small"
         ></lightning-input>
     </lightning-modal-body>

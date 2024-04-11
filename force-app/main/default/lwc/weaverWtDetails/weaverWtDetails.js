@@ -2,8 +2,6 @@ import { LightningElement,api,track, wire } from 'lwc';
 import NORMAL_FIELD from '@salesforce/schema/Account.Pending_Wt_Normal__c';
 import BLACK_FIELD from '@salesforce/schema/Account.Pending_Wt_Black__c';
 import PATANI_FIELD from '@salesforce/schema/Account.Pending_Wt_6666__c';
-import EXTRA_AMOUNT from '@salesforce/schema/Account.ExtraAmtWage__c';
-import EXTRA_AMOUNT_ID from '@salesforce/schema/Account.ExtraAmtWageId__c';
 import { createRecord,getRecord, getFieldValue, updateRecord } from 'lightning/uiRecordApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getRawMaterialInventory from '@salesforce/apex/getrecords.getRawMaterialInventory';
@@ -30,11 +28,8 @@ export default class WeaverWtDetails extends LightningElement {
     @track RawMatDetails;
     @track TowParticularsList;
     @track TowelDetails;
-    @api TotalBalanceWage;
     @track DaySpecificWage ;
-    @track ExtraAmtWage;            //This is the ammount that is to be given by the weaver
-    @api SignificantWageBal;      //This is the bal amt that is not tallyed while paying wages that is splitted to each record
-    @track ExtraAmtWageId;
+    @track DaySpecificDeduction;
 
     connectedCallback(){
         this.WtTypeField = `Pending_Wt_${this.type}__c`;    //By recognizing the weight type we assign the WtTypeField for accessing the values
@@ -56,17 +51,16 @@ export default class WeaverWtDetails extends LightningElement {
                     this.disableAddTowel = false;
                     this.CurrentDateRecId = record.Id;
                     this.DaySpecificWage = record.DaySpecificWage__c;
+                    this.DaySpecificDeduction = record.DaySpecificDeduction__c;
                 }
             });
         }
     }
     //To get the Current Account Details for Updating and using of the fields to maintain the weight balance and all related field values updation 
-    @wire(getRecord, { recordId: "$recordId", fields: [NORMAL_FIELD,BLACK_FIELD,PATANI_FIELD,EXTRA_AMOUNT,EXTRA_AMOUNT_ID] })      //WtType
+    @wire(getRecord, { recordId: "$recordId", fields: [NORMAL_FIELD,BLACK_FIELD,PATANI_FIELD] })      //WtType
     wiredData({ error, data }) {
         if (data) {
             this.WtTypeFieldValue = data.fields[`Pending_Wt_${this.type}__c`].value;    //From the fetched record we access the value of the field and stored in the variable
-            this.ExtraAmtWage = data.fields['ExtraAmtWage__c'].value;
-            this.ExtraAmtWageId = data.fields['ExtraAmtWageId__c'].value;
         } else if (error) {
             let errorMessage = 'Unknown error';
                 if (Array.isArray(error.body)) {
@@ -151,6 +145,7 @@ export default class WeaverWtDetails extends LightningElement {
                     this.disableAddTowel = false;
                     this.CurrentDateRecId = result.id;
                     this.DaySpecificWage = 0;
+                    this.DaySpecificDeduction = 0;
                     const newrec = {
                         Id: result.id,
                         AccountId__c : this.recordId,
@@ -264,72 +259,9 @@ export default class WeaverWtDetails extends LightningElement {
                     .then(result=>{
                         console.log("CurrentDate Record Updated");
                         //Account Updation
-                        console.log("TotalBalanceWage Before Update",this.TotalBalanceWage);
-                        console.log("ExtraAmtWage before update  while Towel :",this.ExtraAmtWage);
-                        if(this.ExtraAmtWage !=0){
-                            console.log("ExtraAmtWage  update  while Towel entered");
-                            if(TowWage > this.ExtraAmtWage){
-                                TowWage -= this.ExtraAmtWage;
-                                console.log("TowWage update there is TowWage > ExtraAmtWage: TowWage",TowWage);
-                                //We have to dispatch the event to add the extra amt in the significant balance
-                                this.SignificantWageBal +=this.ExtraAmtWage;
-                                this.ExtraAmtWageId  = null;
-                                this.ExtraAmtWage = 0;
-                                console.log("TowWage update there is TowWage > ExtraAmtWage: this.ExtraAmtWage",this.ExtraAmtWage);
-                                //Updating the ExtraAmtWageId as null and ExtraAmtWage as 0 because we added it to the significant amt
-                                const wgid = {
-                                    Id: this.recordId,
-                                    ExtraAmtWage__c : this.ExtraAmtWage,
-                                    ExtraAmtWageId__c : this.ExtraAmtWageId
-                                }
-                                this.HandleUpdate(wgid)
-                                .then(result => {
-                                    console.log("Acc updated after ExtraAmtWage changes for TowWage > ExtraAmtWage");
-                                })
-                                .catch(error =>{
-                                    console.error("Acc updation after ExtraAmtWage changes error for TowWage > ExtraAmtWage",error);
-                                });
-                            }
-                            else if(this.ExtraAmtWage >= TowWage){
-                                this.ExtraAmtWage -= TowWage;
-                                console.log("ExtraAmtWage update there is ExtraAmtWage > TowWage: this.ExtraAmtWage",this.ExtraAmtWage);
-                                TowWage = 0;
-                                //Updating the current created towel record as paid because towwage is setteld with extra amt
-                                const amtPaid = {
-                                    Id: result.id,
-                                    //we have to add the amount paid record id to this record to mark as paid
-                                    WageAmountId__c : this.ExtraAmtWageId
-                                }
-                                this.HandleUpdate(amtPaid)
-                                .then(result =>{
-                                    console.log("Ext Amt allocated and paid");
-                                })
-                                .catch(error =>{
-                                    console.error(error);
-                                })
-                                 console.log("ExtraAmtWage update there is ExtraAmtWage > TowWage: TowWage",TowWage);
-                                //Updating Extra wageAmt
-                                const flds = {
-                                    Id : this.recordId,
-                                    ExtraAmtWage__c : this.ExtAmtWage
-                                }
-                                this.HandleUpdate(flds)
-                                .then(result => {
-                                    console.log("Acc updated after ExtraAmtWage changes for ExtraAmtWage > TowWage");
-                                })
-                                .catch(error =>{
-                                    console.error("Acc updation after ExtraAmtWage changes error for ExtraAmtWage > TowWage",error);
-                                });
-                            }
-                        }
-
-
-                        this.TotalBalanceWage = parseFloat(this.TotalBalanceWage) + parseFloat(TowWage);
-                        console.log("TotalBalanceWage After Update",this.TotalBalanceWage);
                         const Accfield = {
                             Id : this.recordId,
                             [`Pending_Wt_${this.type}__c`] : fieldValue,
-                            SalaryBalance__c : this.TotalBalanceWage
                         };
                         this.HandleUpdate(Accfield)
                         .then(result=>{
@@ -343,12 +275,8 @@ export default class WeaverWtDetails extends LightningElement {
                             .then(result =>{
                                 console.log("Towel Inventory Updated");
                                 //here we reflect the change in the cache
-                                console.log("this.TowelDetails.find(Element=> Element.Towel === record.Particulars).TowelQty += parseFloat(record.Quantity):",this.TowelDetails.find(Element=> Element.Towel === record.Particulars).TowelQty += parseFloat(record.Quantity));
+                                //console.log("this.TowelDetails.find(Element=> Element.Towel === record.Particulars).TowelQty += parseFloat(record.Quantity):",this.TowelDetails.find(Element=> Element.Towel === record.Particulars).TowelQty += parseFloat(record.Quantity));
                                 this.disableAddTowel = false;
-                                if(index == towels.length -1){
-                                    const event = new CustomEvent('onupdbal',{detail: {significantwagebal : this.SignificantWageBal ,totalbalancewage : this.TotalBalanceWage }});
-                                    this.dispatchEvent(event);
-                                }
                                 // if(index == towels.length -1){
                                 //     this.dispatchEvent(new CustomEvent('refresh'));
                                 // }
@@ -449,34 +377,14 @@ export default class WeaverWtDetails extends LightningElement {
                                 console.error("Deduction error",error);
                             })
                         }
-                        if(Deduc != 0 ){
-                            console.log("Before Deduction this.TotalBalanceWage",this.TotalBalanceWage);
-                            if((this.TotalBalanceWage - Deduc) < 0){
-                                this.TotalBalanceWage = 0;
-                                console.log("Before update ExtraAmtWage:",this.ExtraAmtWage);
-                                this.ExtraAmtWage += (Deduc - this.TotalBalanceWage);
-                                console.log("After update ExtraAmtWage:",this.ExtraAmtWage);
-                                const accDedField = {
-                                    Id : this.recordId,
-                                    ExtraAmtWage__c : this.ExtraAmtWage
-                                }
-                                this.HandleUpdate(accDedField)
-                                .then(result => {
-                                    console.log("After update ExtraAmtWage:",this.ExtraAmtWage);
-                                })
-                                .catch(error =>{
-                                    console.error("ExtraAmtWage Update Error:",error);
-                                })
-                            }
-                            else{
-                                this.TotalBalanceWage -= Deduc;
-                                console.log("After Deduction this.TotalBalanceWage",this.TotalBalanceWage);
-                            }
-                        }
                         //CurrentDate Record Updation
+                        console.log("DaySpecificDeduction Before update:",this.DaySpecificDeduction);
+                        this.DaySpecificDeduction = parseFloat(Deduc) + parseFloat(this.DaySpecificDeduction);
+                        console.log("DaySpecificDeduction After update:",this.DaySpecificDeduction);
                         const CurDtRecFld = {
                             Id : this.CurrentDateRecId,
                             [`DaySpecific${this.type}BalanceWt__c`] : fieldValue,
+                            DaySpecificDeduction__c : this.DaySpecificDeduction
                         }
                         this.HandleUpdate(CurDtRecFld)
                         .then(result=>{
@@ -485,7 +393,6 @@ export default class WeaverWtDetails extends LightningElement {
                             const Accfield = {
                                 Id : this.recordId,
                                 [`Pending_Wt_${this.type}__c`] : fieldValue,
-                                SalaryBalance__c : this.TotalBalanceWage
                             };
                             this.HandleUpdate(Accfield)
                             .then(result=>{
@@ -499,17 +406,17 @@ export default class WeaverWtDetails extends LightningElement {
                                 .then(result =>{
                                     console.log("Inventory Updated");
                                     
-                                         this.val = {
-                                            Id : RawSubid,
-                                            TowelOrRawMaterialWeightId__c : this.CurrentDateRecId,
-                                            RawMaterials__c : rawmat,
-                                            RawMaterialWeight__c : record.RawMaterialWeight,
-                                        } 
+                                        //  this.val = {
+                                        //     Id : RawSubid,
+                                        //     TowelOrRawMaterialWeightId__c : this.CurrentDateRecId,
+                                        //     RawMaterials__c : rawmat,
+                                        //     RawMaterialWeight__c : record.RawMaterialWeight,
+                                        // } 
                                         //this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r = [...this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r,val];
-                                        console.log("fin");
+                                        //console.log("fin");
                                     //Available raw material weight updation
                                     //Here we update the RawMatdetails for reactivity to show in the frontend
-                                    this.RawMatDetails.find(rec=> rec.RawMaterial === record.RawMaterial).AvailableRawMaterialWeight -= parseFloat(record.RawMaterialWeight);
+                                    //this.RawMatDetails.find(rec=> rec.RawMaterial === record.RawMaterial).AvailableRawMaterialWeight -= parseFloat(record.RawMaterialWeight);
                                     this.disableAddRawMat = false;
                                     //Dispatching an event at the end of this for each loop to notify the salary balance
                                     
@@ -623,9 +530,5 @@ export default class WeaverWtDetails extends LightningElement {
         }));
     }
 
-    //To Close the Add Towel Tab
-    handleCancel(){
-        this.isaddTowel = false;
-    }
 
 }
