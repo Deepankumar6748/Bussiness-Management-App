@@ -22,8 +22,19 @@
                         <template for:each={WtDetail.TowelOrRawMaterialWeightDetails__r} for:item="Details">
                             <tr key={Details.Id} class="slds-hint-parent">
                                 <td data-label="Partculars">
-                                    <div class="slds-truncate" if:true={Details.RawMaterials__c} title={Details.RawMaterials__c} style="border-color: black;">{Details.RawMaterials__c}</div>
-                                    <div class="slds-truncate" if:true={Details.Particulars__c} title={Details.Particulars__c}>{Details.Particulars__c}</div>
+                                    <div class="slds-truncate" if:true={Details.RawMaterials__c} title={Details.RawMaterials__c} style="border-color: black;"><lightning-record-view-form
+                                        record-id={Details.RawMaterials__c}
+                                        object-api-name="RawMaterialInventory__c"
+                                        
+                                    >
+                                    <lightning-output-field field-name="Name" variant="label-hidden"> </lightning-output-field>
+                                    </lightning-record-view-form></div>
+                                    <div class="slds-truncate" if:true={Details.Particulars__c} title={Details.Particulars__c}><lightning-record-view-form
+                                        record-id={Details.Particulars__c}
+                                        object-api-name="TowelsInventory__c"
+                                    >
+                                    <lightning-output-field field-name="Name" variant="label-hidden"> </lightning-output-field>
+                                    </lightning-record-view-form></div>
                                 </td>
                                 <td data-label="Quantity">
                                     <div class="slds-truncate" if:true={Details.Quantity__c} title={Details.Quantity__c}>{Details.Quantity__c}</div>

@@ -1,0 +1,9 @@
+.container{
+    max-height: 250px; 
+    overflow-y: auto; 
+    border-radius: 0.25rem; 
+    border: 1px solid #d8dde6;
+}
+td{
+    padding: 10px;
+}

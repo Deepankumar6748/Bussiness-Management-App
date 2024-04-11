@@ -3,6 +3,7 @@ import NORMAL_FIELD from '@salesforce/schema/Account.Pending_Wt_Normal__c';
 import BLACK_FIELD from '@salesforce/schema/Account.Pending_Wt_Black__c';
 import PATANI_FIELD from '@salesforce/schema/Account.Pending_Wt_6666__c';
 import EXTRA_AMOUNT from '@salesforce/schema/Account.ExtraAmtWage__c';
+import EXTRA_AMOUNT_ID from '@salesforce/schema/Account.ExtraAmtWageId__c';
 import { createRecord,getRecord, getFieldValue, updateRecord } from 'lightning/uiRecordApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getRawMaterialInventory from '@salesforce/apex/getrecords.getRawMaterialInventory';
@@ -11,7 +12,7 @@ import AddRawMatModal from 'c/addRawMaterial';
 import AddTowModal from 'c/addTowel';
 
 export default class WeaverWtDetails extends LightningElement {
-    @api wtdetails = [];               //We get the records of Type "Normal or Black or 6666" for the current account to check for record creation
+    @api wtdetails;               //We get the records of Type "Normal or Black or 6666" for the current account to check for record creation
     @api recordId;              //current Account Id
     @api type;                   //Current account's related TowelDetails object type
     @track WtTypeFieldValue;              // Current account WtTypeFieldValue
@@ -27,18 +28,18 @@ export default class WeaverWtDetails extends LightningElement {
     @track disableAddRawMat = true;
     @track RawMaterialsList;
     @track RawMatDetails;
-    @api TowParticularsList;
-    @api TowelDetails;
+    @track TowParticularsList;
+    @track TowelDetails;
     @api TotalBalanceWage;
     @track DaySpecificWage ;
     @track ExtraAmtWage;            //This is the ammount that is to be given by the weaver
     @api SignificantWageBal;      //This is the bal amt that is not tallyed while paying wages that is splitted to each record
-
+    @track ExtraAmtWageId;
 
     connectedCallback(){
         this.WtTypeField = `Pending_Wt_${this.type}__c`;    //By recognizing the weight type we assign the WtTypeField for accessing the values
         console.log("WtTypeField:",this.WtTypeField);
-        console.log("wtdetails:",this.wtdetails[0]);
+        console.log("wtdetails:",this.wtdetails);
         const currentDate = new Date();
         // Get year, month, and day
         const year = currentDate.getFullYear();
@@ -60,11 +61,12 @@ export default class WeaverWtDetails extends LightningElement {
         }
     }
     //To get the Current Account Details for Updating and using of the fields to maintain the weight balance and all related field values updation 
-    @wire(getRecord, { recordId: "$recordId", fields: [NORMAL_FIELD,BLACK_FIELD,PATANI_FIELD,EXTRA_AMOUNT] })      //WtType
+    @wire(getRecord, { recordId: "$recordId", fields: [NORMAL_FIELD,BLACK_FIELD,PATANI_FIELD,EXTRA_AMOUNT,EXTRA_AMOUNT_ID] })      //WtType
     wiredData({ error, data }) {
         if (data) {
             this.WtTypeFieldValue = data.fields[`Pending_Wt_${this.type}__c`].value;    //From the fetched record we access the value of the field and stored in the variable
             this.ExtraAmtWage = data.fields['ExtraAmtWage__c'].value;
+            this.ExtraAmtWageId = data.fields['ExtraAmtWageId__c'].value;
         } else if (error) {
             let errorMessage = 'Unknown error';
                 if (Array.isArray(error.body)) {
@@ -149,6 +151,17 @@ export default class WeaverWtDetails extends LightningElement {
                     this.disableAddTowel = false;
                     this.CurrentDateRecId = result.id;
                     this.DaySpecificWage = 0;
+                    const newrec = {
+                        Id: result.id,
+                        AccountId__c : this.recordId,
+                        Date__c : this.formattedDate,
+                        [`DaySpecific${this.type}BalanceWt__c`] : this.WtTypeFieldValue,
+                        TowelOrRawMaterialWeightDetails__r:[],
+                        DaySpecificDeduction__c : 0,
+                        DaySpecificWage__c : 0,
+                        TowelWeightType__c : this.type
+                    };
+                    this.wtdetails = [...this.wtdetails,newrec];
                 })
                 .catch(error =>{
                     this.disableCreate = false;         //If there is any error then the button is restored
@@ -221,10 +234,11 @@ export default class WeaverWtDetails extends LightningElement {
             this.disableAddTowel = true;            //To prevent queing of requests simultaneously
             towels.forEach(record=>{
                 let TowWagePerUnit = this.TowelDetails.find(Element=> Element.Towel === record.Particulars).TowelWage;
+                let Particulars = this.TowelDetails.find(Element=> Element.Towel === record.Particulars).TowelId;
                 let TowWage = parseFloat(TowWagePerUnit)  * parseFloat(record.Quantity);      // Accessing the wage based on the particular of the towel
                 const fields = {
                     TowelOrRawMaterialWeightId__c : this.CurrentDateRecId,
-                    Particulars__c : record.Particulars,
+                    Particulars__c : Particulars,
                     Quantity__c : record.Quantity,
                     TowelWeight__c : record.TowelWeight,
                     TowelWagePerUnit__c : TowWagePerUnit,
@@ -259,11 +273,22 @@ export default class WeaverWtDetails extends LightningElement {
                                 console.log("TowWage update there is TowWage > ExtraAmtWage: TowWage",TowWage);
                                 //We have to dispatch the event to add the extra amt in the significant balance
                                 this.SignificantWageBal +=this.ExtraAmtWage;
-                                const event = new CustomEvent('onupdsignbal',{detail: {significantwagebal : this.SignificantWageBal}});
-                                this.dispatchEvent(event);
+                                this.ExtraAmtWageId  = null;
                                 this.ExtraAmtWage = 0;
                                 console.log("TowWage update there is TowWage > ExtraAmtWage: this.ExtraAmtWage",this.ExtraAmtWage);
-                                this.UpdateExtAmtChg(this.ExtraAmtWage);
+                                //Updating the ExtraAmtWageId as null and ExtraAmtWage as 0 because we added it to the significant amt
+                                const wgid = {
+                                    Id: this.recordId,
+                                    ExtraAmtWage__c : this.ExtraAmtWage,
+                                    ExtraAmtWageId__c : this.ExtraAmtWageId
+                                }
+                                this.HandleUpdate(wgid)
+                                .then(result => {
+                                    console.log("Acc updated after ExtraAmtWage changes for TowWage > ExtraAmtWage");
+                                })
+                                .catch(error =>{
+                                    console.error("Acc updation after ExtraAmtWage changes error for TowWage > ExtraAmtWage",error);
+                                });
                             }
                             else if(this.ExtraAmtWage >= TowWage){
                                 this.ExtraAmtWage -= TowWage;
@@ -273,9 +298,28 @@ export default class WeaverWtDetails extends LightningElement {
                                 const amtPaid = {
                                     Id: result.id,
                                     //we have to add the amount paid record id to this record to mark as paid
+                                    WageAmountId__c : this.ExtraAmtWageId
                                 }
-                                console.log("ExtraAmtWage update there is ExtraAmtWage > TowWage: TowWage",TowWage);
-                                this.UpdateExtAmtChg(this.ExtraAmtWage);
+                                this.HandleUpdate(amtPaid)
+                                .then(result =>{
+                                    console.log("Ext Amt allocated and paid");
+                                })
+                                .catch(error =>{
+                                    console.error(error);
+                                })
+                                 console.log("ExtraAmtWage update there is ExtraAmtWage > TowWage: TowWage",TowWage);
+                                //Updating Extra wageAmt
+                                const flds = {
+                                    Id : this.recordId,
+                                    ExtraAmtWage__c : this.ExtAmtWage
+                                }
+                                this.HandleUpdate(flds)
+                                .then(result => {
+                                    console.log("Acc updated after ExtraAmtWage changes for ExtraAmtWage > TowWage");
+                                })
+                                .catch(error =>{
+                                    console.error("Acc updation after ExtraAmtWage changes error for ExtraAmtWage > TowWage",error);
+                                });
                             }
                         }
 
@@ -301,6 +345,13 @@ export default class WeaverWtDetails extends LightningElement {
                                 //here we reflect the change in the cache
                                 console.log("this.TowelDetails.find(Element=> Element.Towel === record.Particulars).TowelQty += parseFloat(record.Quantity):",this.TowelDetails.find(Element=> Element.Towel === record.Particulars).TowelQty += parseFloat(record.Quantity));
                                 this.disableAddTowel = false;
+                                if(index == towels.length -1){
+                                    const event = new CustomEvent('onupdbal',{detail: {significantwagebal : this.SignificantWageBal ,totalbalancewage : this.TotalBalanceWage }});
+                                    this.dispatchEvent(event);
+                                }
+                                // if(index == towels.length -1){
+                                //     this.dispatchEvent(new CustomEvent('refresh'));
+                                // }
                             })
                             .catch(error=>{
                                 console.error("Towel Inventory Updation error:",error);
@@ -324,25 +375,7 @@ export default class WeaverWtDetails extends LightningElement {
         this.TimeoutSubmitRecCreId =  RecCreId; //Assigning the Timeoutid to cancel the particular Timeout
         
     }
-
-    UpdateExtAmtChg(ExtAmtWage){
-    //Acc updation after ExtraAmtWage changes
-        const flds = {
-            Id : this.recordId,
-            ExtraAmtWage__c : ExtAmtWage
-        }
-        this.HandleUpdate(flds)
-        .then(result => {
-            console.log("Acc updated after ExtraAmtWage changes");
-        })
-        .catch(error =>{
-            console.error("Acc updation after ExtraAmtWage changes error",error);
-        });
-    }
-
-
-
-
+    val;
     //Handling Addition of RawMaterials Details for current Date
     handleRawMaterialsSubmit(event){
         const rawmaterialsWOrWoDp = event.detail.rawmaterials;
@@ -381,15 +414,17 @@ export default class WeaverWtDetails extends LightningElement {
         let RecCreId;                // Intialize a variable to Store the id of the timeout function to be executed
         RecCreId = setTimeout(() => {
             this.disableAddRawMat = true;       //To prevent queing of requests simultaneously
-                rawmaterials.forEach(record =>{
+                rawmaterials.forEach((record,index)=>{
+                    const rawmat = this.RawMatDetails.find(Rawmat => Rawmat.RawMaterial === record.RawMaterial).RawMatId;           //Since RawMaterials__c is a lookup field so we store it as an id
                     const fields = {
                         TowelOrRawMaterialWeightId__c : this.CurrentDateRecId,
-                        RawMaterials__c : record.RawMaterial,
+                        RawMaterials__c : rawmat,
                         RawMaterialWeight__c : record.RawMaterialWeight,
                     };
                     const recordInput = { apiName: 'TowelOrRawMaterialWeightDetail__c' , fields}
                     this.CreateRecorc(recordInput)
                     .then(result=>{ 
+                        const RawSubid = result.id;
                         console.log("fieldValue:",this.WtTypeFieldValue);     
                         const fieldValue = parseFloat(this.WtTypeFieldValue) + parseFloat(record.RawMaterialWeight);
                         this.WtTypeFieldValue = fieldValue;
@@ -463,13 +498,24 @@ export default class WeaverWtDetails extends LightningElement {
                                 this.HandleUpdate(Invfield)
                                 .then(result =>{
                                     console.log("Inventory Updated");
+                                    
+                                         this.val = {
+                                            Id : RawSubid,
+                                            TowelOrRawMaterialWeightId__c : this.CurrentDateRecId,
+                                            RawMaterials__c : rawmat,
+                                            RawMaterialWeight__c : record.RawMaterialWeight,
+                                        } 
+                                        //this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r = [...this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r,val];
+                                        console.log("fin");
                                     //Available raw material weight updation
                                     //Here we update the RawMatdetails for reactivity to show in the frontend
                                     this.RawMatDetails.find(rec=> rec.RawMaterial === record.RawMaterial).AvailableRawMaterialWeight -= parseFloat(record.RawMaterialWeight);
                                     this.disableAddRawMat = false;
                                     //Dispatching an event at the end of this for each loop to notify the salary balance
-                                    //if()
-
+                                    
+                                    // if(index == rawmaterials.length -1){
+                                    //     this.dispatchEvent(new CustomEvent('refresh'));
+                                    // }
                                 })
                                 .catch(error =>{
                                     console.error("Inventory Updation error:",error);
@@ -488,7 +534,7 @@ export default class WeaverWtDetails extends LightningElement {
                         console.error(error);
                     });
                 });
-            },5000); 
+            },5000);
             this.disableAddRawMat = false;
             console.log("Exit");
         this.TimeoutSubmitRecCreId =  RecCreId; //Assigning the Timeoutid to cancel the particular Timeout

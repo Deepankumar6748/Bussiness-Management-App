@@ -1,64 +1,79 @@
 <template>
-    <div class="slds-p-around_medium slds-tabs_scoped__content ">
-        <table class="slds-table slds-table_cell-buffer slds-no-row-hover" border="1.0">
-            <thead>
-                <tr class="slds-line-height_reset">
-                    <th scope="col" style="width: 20px;">
-                        <div class="slds-truncate" title="Date">Date</div>
-                    </th>
-                    <th scope="col" style="width: 20px;">
-                        <div class="slds-truncate" title="Partculars">Particulars</div>
-                    </th>
-                    <th scope="col" style="width: 20px;">
-                        <div class="slds-truncate" title="Quantity/RawMatWeight">Quantity/<br>RawMatWt</div>
-                    </th>
-                    <th scope="col" style="width: 20px;">
-                        <div class="slds-truncate" title="TowelWagePerUnit/DeductionAmtPerUnit">TowelWagePerUnit/<br>DedAmtPerUnit</div>
-                    </th>
-                    <th scope="col" style="width: 20px;">
-                        <div class="slds-truncate" title="Subtotal">Subtotal</div>
-                    </th>
-                    <th scope="col" style="width: 20px;">
-                        <div class="slds-truncate" title="Paid/Unpaid">Paid/<br>Unpaid</div>
-                    </th>
-                </tr>
-            </thead>
-        </table>
-        <div style="max-height: 250px; overflow-y: auto; border-radius: 0.25rem; border: 1px solid #d8dde6;">
-            <template  for:each={wagedetails} for:item="WageDetail">
-                <!--For Each Parent Record A Card is created and details are displayed-->
-                    <table key={WageDetail.Id} class="slds-table slds-table_cell-buffer slds-no-row-hover" border="1.0">
-                        <tbody>
-                            <template for:each={WageDetail.TowelOrRawMaterialWeightDetails__r} for:item="Details">
-                                <tr key={Details.Id} class="slds-hint-parent">
-                                    <td data-label="Date">
-                                        <div class="slds-truncate" if:true={WageDetail.Date__c} title={WageDetail.Date__c}>{WageDetail.Date__c}</div>
-                                    </td>
-                                    <td data-label="Partculars">
-                                        <div class="slds-truncate" if:true={Details.Particulars__c} title={Details.Particulars__c}>{Details.Particulars__c}</div>
-                                        <div class="slds-truncate" if:true={Details.RawMaterials__c} title={Details.RawMaterials__c} style="background-color: rgb(243, 243, 162);">{Details.RawMaterials__c}</div>
-                                                </td>
-                                    <td data-label="Quantity/Weight">
-                                        <div class="slds-truncate" if:true={Details.Quantity__c} title={Details.Quantity__c}>{Details.Quantity__c}</div>
-                                        <div class="slds-truncate" if:true={Details.RawMaterialWeight__c} title={Details.RawMaterialWeight__c} style="background-color: rgb(243, 243, 162);">{Details.RawMaterialWeight__c}</div>
-                                    </td>
-                                    <td data-label="TowelWagePerUnit/DeductionAmtPerUnit">
-                                        <div class="slds-truncate" if:true={Details.TowelWagePerUnit__c} title={Details.TowelWagePerUnit__c}>{Details.TowelWagePerUnit__c}</div>
-                                        <div class="slds-truncate" if:true={Details.DeductionAmtPerUnit__c} title={Details.DeductionAmtPerUnit__c} style="background-color: rgb(243, 243, 162);">{Details.DeductionAmtPerUnit__c}</div>
-                                    </td>
-                                    <td data-label="Subtotal">
-                                        <div class="slds-truncate" if:true={Details.Wage__c} title={Details.Wage__c}>{Details.Wage__c}</div>
-                                        <div class="slds-truncate" if:true={Details.Deduction__c} title={Details.Deduction__c} style="background-color: rgb(243, 243, 162);">{Details.Deduction__c}</div>
-                                    </td>
-                                    <td data-label="Paid/Unpaid">
-                                        <div class="slds-truncate" ></div>
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table> 
-            </template>
-        </div>
-        <lightning-button class="slds-p-around_medium" label="Pay Wage" onclick={handleClickWagePay}  variant="brand" style="padding: 10px; border-radius: 2%;"></lightning-button>
-    </div>   
+    <div class="slds-box slds-text-align_center slds-m-around_small" style="font-weight: bold" >
+        <h3>Total Wage Balance {TotalBalanceWage}</h3>
+    </div>
+    <div class="slds-tabs_scoped__content " style="border: 1px solid #d8dde6;border-radius: 0.25rem;max-height: 300px;overflow-y: auto;">
+        <template  for:each={wagedetails} for:item="WageDetail">
+            <lightning-card class="" key={WageDetail.Id} title={WageDetail.Date__c}>   
+                <table class="slds-table slds-table_cell-buffer  slds-table_bordered slds-scrollable slds-table_col-bordered slds-scrollable_x" style="min-width: 100px;">
+                    <thead>
+                        <tr class="slds-line-height_reset">
+                            <th scope="col">
+                                <div class="slds-truncate" title="Partculars">Particulars</div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate" title="Quantity/RawMatWeight">Quantity/<br>RawMatWt</div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate" title="TowelWagePerUnit/DeductionAmtPerUnit">TowelWagePerUnit/<br>DedAmtPerUnit</div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate" title="Subtotal">Subtotal</div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate" title="Paid/Unpaid">Paid/<br>Unpaid</div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={WageDetail.TowelOrRawMaterialWeightDetails__r} for:item="Details">
+                            <tr key={Details.Id} class="slds-hint-parent">
+                                <td data-label="Partculars">
+                                    <div class="slds-truncate" if:true={Details.RawMaterials__c} title={Details.RawMaterials__c} style="border-color: black;"><lightning-record-view-form
+                                        record-id={Details.RawMaterials__c}
+                                        object-api-name="RawMaterialInventory__c"  
+                                    >
+                                    <lightning-output-field field-name="Name" variant="label-hidden"> </lightning-output-field>
+                                    </lightning-record-view-form></div>
+                                    <div class="slds-truncate" if:true={Details.Particulars__c} title={Details.Particulars__c}><lightning-record-view-form
+                                        record-id={Details.Particulars__c}
+                                        object-api-name="TowelsInventory__c"
+                                    >
+                                    <lightning-output-field field-name="Name" variant="label-hidden"> </lightning-output-field>
+                                    </lightning-record-view-form></div>
+                                </td>
+                                <td data-label="Quantity/Weight">
+                                    <div class="slds-truncate" if:true={Details.Quantity__c} title={Details.Quantity__c}>{Details.Quantity__c}</div>
+                                    <div class="slds-truncate" if:true={Details.RawMaterialWeight__c} title={Details.RawMaterialWeight__c} style="background-color: rgb(243, 243, 162);">{Details.RawMaterialWeight__c}</div>
+                                </td>
+                                <td data-label="TowelWagePerUnit/DeductionAmtPerUnit">
+                                    <div class="slds-truncate" if:true={Details.TowelWagePerUnit__c} title={Details.TowelWagePerUnit__c}>{Details.TowelWagePerUnit__c}</div>
+                                    <div class="slds-truncate" if:true={Details.DeductionAmtPerUnit__c} title={Details.DeductionAmtPerUnit__c} style="background-color: rgb(243, 243, 162);">{Details.DeductionAmtPerUnit__c}</div>
+                                </td>
+                                <td data-label="Subtotal">
+                                    <div class="slds-truncate" if:true={Details.Wage__c} title={Details.Wage__c}>{Details.Wage__c}</div>
+                                    <div class="slds-truncate" if:true={Details.Deduction__c} title={Details.Deduction__c} style="background-color: rgb(243, 243, 162);">{Details.Deduction__c}</div>
+                                </td>
+                                <td data-label="Paid/Unpaid">
+                                    <div class="slds-truncate">
+                                        <div if:true={Details.WageAmountId__c} style="font-weight: bold">
+                                            <h3> Paid </h3>
+                                        </div>
+                                        <div if:false={Details.WageAmountId__c} style="font-weight: bold">
+                                            <h3> Not Paid </h3>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </lightning-card>
+        </template>
+    </div>
+    <lightning-button class="slds-p-around_medium" label="Pay Wage" onclick={handleClickWagePay}  variant="brand" style="padding: 10px; border-radius: 2%;"></lightning-button>
+        <section if:true={IsUndopopover} aria-describedby="dialog-body-id-112" aria-labelledby="dialog-heading-id-117" class="slds-popover slds-nubbib_left slds-popover_full-width" role="dialog" style="margin: 15px; background-color:rgb(33, 240, 85) ">
+            <div class="slds-popover__header ">Amount is being Updated!    <lightning-button label="Undo" onclick={triggerCancelAmountRecCreation}></lightning-button></div>
+        </section>
 </template>
+
