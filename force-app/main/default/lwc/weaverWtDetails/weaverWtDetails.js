@@ -5,8 +5,10 @@ import PATANI_FIELD from '@salesforce/schema/Account.Pending_Wt_6666__c';
 import { createRecord,getRecord, getFieldValue, updateRecord } from 'lightning/uiRecordApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getRawMaterialInventory from '@salesforce/apex/getrecords.getRawMaterialInventory';
+import CreateRecTowelOrRawMaterialWeightDetails from '@salesforce/apex/CreateRecords.CreateRecTowelOrRawMaterialWeightDetails'
 import getTowelsInventory from '@salesforce/apex/getrecords.getTowelsInventory';
 import AddRawMatModal from 'c/addRawMaterial';
+import {CreateRecorc,HandleUpdate} from 'c/recordCreationUpdationCancelUtility';
 import AddTowModal from 'c/addTowel';
 
 export default class WeaverWtDetails extends LightningElement {
@@ -62,17 +64,8 @@ export default class WeaverWtDetails extends LightningElement {
         if (data) {
             this.WtTypeFieldValue = data.fields[`Pending_Wt_${this.type}__c`].value;    //From the fetched record we access the value of the field and stored in the variable
         } else if (error) {
-            let errorMessage = 'Unknown error';
-                if (Array.isArray(error.body)) {
-                    errorMessage = error.body.map(e => e.message).join(', ');
-                } else if (typeof error.body.message === 'string') {
-                    errorMessage = error.body.message;
-                }
-                this.dispatchEvent(new ShowToastEvent({
-                    title: "Error",
-                    message: errorMessage,
-                    variant: "error"
-                }));
+            console.error("WtTypeFieldValue Creation error",error);
+            this.ErrorToastmsg(error);
         }
     }
 
@@ -94,6 +87,10 @@ export default class WeaverWtDetails extends LightningElement {
                     TowelId : record.Id
                 });
             })
+        }
+        else if (error) {
+            console.error("TowParticularsList Creation error",error);
+            this.ErrorToastmsg(error);
         }
     }
    
@@ -117,6 +114,10 @@ export default class WeaverWtDetails extends LightningElement {
             });
         })
     }
+    else if (error) {
+        console.error("RawMaterialsList Creation error",error);
+        this.ErrorToastmsg(error);
+    }
    }
 
     //To create the Current Date Record
@@ -138,8 +139,11 @@ export default class WeaverWtDetails extends LightningElement {
             },4500);
             let RecCreId;                // Intialize a variable to Store the id of the timeout function to be executed
             RecCreId = setTimeout(() => {
-                this.CreateRecorc(recordInput)
+                CreateRecorc(recordInput)
                 .then(result=>{
+                    const message = "Date Record has been Created"
+                    console.log(message);
+                    this.SuccessToastmsg(message);
                     this.disableCreate = true;
                     this.disableAddRawMat = false;
                     this.disableAddTowel = false;
@@ -160,7 +164,8 @@ export default class WeaverWtDetails extends LightningElement {
                 })
                 .catch(error =>{
                     this.disableCreate = false;         //If there is any error then the button is restored
-                    console.error(error);
+                    console.error("Date Record Creation Error"+error);
+                    this.ErrorToastmsg(error);
                 });
             }, 5000);
             this.TimeoutCurrentDateRecCreId =  RecCreId; //Assigning the Timeoutid to cancel the particular Timeout
@@ -194,7 +199,6 @@ export default class WeaverWtDetails extends LightningElement {
     //Handling Addition of Towel Details for current Date
     handleTowelsSubmit(event){
         const towelsWOrWoDp = event.detail.towels;   //   towelsWOrWoDp => towelsWithOrWithoutDuplicates
-
         //We have to process the list for duplicate values
         for (let i = 0; i < towelsWOrWoDp.length; i++) {
             let count = 0;
@@ -225,89 +229,133 @@ export default class WeaverWtDetails extends LightningElement {
             this.IsOpenPopupSubmit = false;
         },4500);
         let RecCreId;                // Intialize a variable to Store the id of the timeout function to be executed
-        RecCreId = setTimeout(() => {
+        let TowelRecords = [];         //For Towels Record Creation
+        let TowParticularIdAndQtyForInv = [];       // For Inventory Updation
+        let TotTowWage = 0;             //For Acc And CurrentDate Record Updation
+        let TotTowWeight = 0            //For Acc And CurrentDate Record Updation
+        towels.forEach((record)=>{
+                    let TowWagePerUnit = this.TowelDetails.find(Element=> Element.Towel === record.Particulars).TowelWage;
+                    let Particulars = this.TowelDetails.find(Element=> Element.Towel === record.Particulars).TowelId;
+                    let TowWage = parseFloat(TowWagePerUnit)  * parseFloat(record.Quantity);      // Accessing the wage based on the particular of the towel
+                    TotTowWage = parseFloat(TotTowWage) + parseFloat(TowWage);
+                    TotTowWeight = parseFloat(record.TowelWeight) + parseFloat(TotTowWeight);
+                    TowParticularIdAndQtyForInv.push({particular: Particulars,quantity: parseFloat(this.TowelDetails.find(Element=> Element.Towel === record.Particulars).TowelQty) + parseFloat(record.Quantity)})  
+                    const fields = {
+                        TowelOrRawMaterialWeightId__c : this.CurrentDateRecId,
+                        Particulars__c : Particulars,
+                        Quantity__c : parseFloat(record.Quantity),
+                        TowelWeight__c : parseFloat(record.TowelWeight),
+                        TowelWagePerUnit__c : TowWagePerUnit,
+                        Wage__c : TowWage
+                    };
+                    TowelRecords.push(fields);
+            })
+        RecCreId = setTimeout(  () => {
             this.disableAddTowel = true;            //To prevent queing of requests simultaneously
-            towels.forEach(record=>{
-                let TowWagePerUnit = this.TowelDetails.find(Element=> Element.Towel === record.Particulars).TowelWage;
-                let Particulars = this.TowelDetails.find(Element=> Element.Towel === record.Particulars).TowelId;
-                let TowWage = parseFloat(TowWagePerUnit)  * parseFloat(record.Quantity);      // Accessing the wage based on the particular of the towel
-                const fields = {
-                    TowelOrRawMaterialWeightId__c : this.CurrentDateRecId,
-                    Particulars__c : Particulars,
-                    Quantity__c : record.Quantity,
-                    TowelWeight__c : record.TowelWeight,
-                    TowelWagePerUnit__c : TowWagePerUnit,
-                    Wage__c : TowWage
-                };
-                const recordInput = { apiName: 'TowelOrRawMaterialWeightDetail__c' , fields}
-                this.CreateRecorc(recordInput)
-                .then(result=>{
-                    console.log("fieldValue:",this.WtTypeFieldValue);
-                    const fieldValue = parseFloat(this.WtTypeFieldValue) - parseFloat(record.TowelWeight);
-                    this.WtTypeFieldValue = fieldValue;
-                    console.log("fieldValue update:",fieldValue);
-                    //CurrentDate Record Updation
-                    console.log("DaySpecificWage Before update:",this.DaySpecificWage);
-                    this.DaySpecificWage = parseFloat(TowWage) + parseFloat(this.DaySpecificWage);
-                    console.log("DaySpecificWage After update:",this.DaySpecificWage);
-                    const CurDtRecFld = {
-                        Id : this.CurrentDateRecId,
-                        [`DaySpecific${this.type}BalanceWt__c`] : fieldValue,
-                        DaySpecificWage__c : this.DaySpecificWage
-                    }
-                    this.HandleUpdate(CurDtRecFld)
-                    .then(result=>{
-                        console.log("CurrentDate Record Updated");
-                        //Account Updation
-                        const Accfield = {
-                            Id : this.recordId,
-                            [`Pending_Wt_${this.type}__c`] : fieldValue,
-                        };
-                        this.HandleUpdate(Accfield)
-                        .then(result=>{
-                            console.log("Account Updated");
-                            //Towel Inventory Updation
-                            const Invfield = {
-                                Id : this.TowelDetails.find(Element=> Element.Towel === record.Particulars).TowelId,
-                                Quantity__c : parseFloat(this.TowelDetails.find(Element=> Element.Towel === record.Particulars).TowelQty) + parseFloat(record.Quantity)
-                            };
-                            this.HandleUpdate(Invfield)
+             CreateRecTowelOrRawMaterialWeightDetails({TowelRecords:TowelRecords})
+                .then(response => {
+                        if (response.isSuccess) {
+                            const message = "All Towel Records are Created";
+                            console.log(message);
+                            this.SuccessToastmsg(message);
+
+                            //CurrentDate Record Updation
+                            console.log("fieldValue:",this.WtTypeFieldValue);
+                            this.WtTypeFieldValue = parseFloat(this.WtTypeFieldValue) - parseFloat(TotTowWeight);
+                            console.log("fieldValue update:",this.WtTypeFieldValue);
+                            console.log("DaySpecificWage Before update:",this.DaySpecificWage);
+                            this.DaySpecificWage = parseFloat(TotTowWage) + parseFloat(this.DaySpecificWage);
+                            console.log("DaySpecificWage After update:",this.DaySpecificWage);
+                            const fields = {
+                                Id : this.CurrentDateRecId,
+                                [`DaySpecific${this.type}BalanceWt__c`] : this.WtTypeFieldValue,
+                                DaySpecificWage__c : this.DaySpecificWage
+                            }
+                            HandleUpdate(fields)
                             .then(result =>{
-                                console.log("Towel Inventory Updated");
-                                //here we reflect the change in the cache
-                                //console.log("this.TowelDetails.find(Element=> Element.Towel === record.Particulars).TowelQty += parseFloat(record.Quantity):",this.TowelDetails.find(Element=> Element.Towel === record.Particulars).TowelQty += parseFloat(record.Quantity));
-                                this.disableAddTowel = false;
-                                // if(index == towels.length -1){
-                                //     this.dispatchEvent(new CustomEvent('refresh'));
-                                // }
+                                const message = "CurrentDate Record Updated";
+                                console.log(message);
+                                //this.SuccessToastmsg(message);
+
+                                //Account Record Updation
+                                const fields = {
+                                    Id : this.recordId,
+                                    [`Pending_Wt_${this.type}__c`] : this.WtTypeFieldValue,
+                                };
+                                HandleUpdate(fields)
+                                .then(result =>{
+                                    const message = "Account Record Updated ";
+                                    console.log(message);
+                                    //this.SuccessToastmsg(message);
+
+                                    //Towel Inventory Updation
+                                    this.TowelInvUpdation(TowParticularIdAndQtyForInv)
+                                    .then(result =>{
+                                        if(result === TowParticularIdAndQtyForInv.length){
+                                            const message = "All Towels are Updated in Inventory";
+                                            this.SuccessToastmsg(message);
+                                            this.disableAddTowel = false;
+                                        }
+                                        else{
+                                            const message = "Only "+result+" records in Inventory is Updated out of "+TowParticularIdAndQtyForInv.length;
+                                            this.WarningToastmsg(message);
+                                            this.disableAddTowel = false;
+                                        }
+                                    })
+                                    .catch(error =>{
+                                        console.error(error);
+                                        this.disableAddTowel = false
+                                    })
+                                })
+                                .catch(error=>{
+                                    console.error("Account Updation error:",error);
+                                    this.disableAddTowel = false
+                                });
                             })
-                            .catch(error=>{
-                                console.error("Towel Inventory Updation error:",error);
-                            });
-                        })
-                        .catch(error=>{
-                            console.error("Account Updation error:",error);
-                        });
-                    })
-                    .catch(error=>{
-                        console.error("CurrentDate Record Updation error:",error);
-                    });
-                })
-                .catch(error=>{
-                    console.error("Record Creation error:",error);
-                });
-            });   
+                            .catch(error =>{
+                                console.error("CurrentDate Record not Updated")
+                                this.ErrorToastmsg(error);
+                                this.disableAddTowel = false
+                            })
+                        } else {
+                            const message = "All Towel Records not created";
+                            console.log(message);
+                            this.WarningToastmsg(message);
+                            this.disableAddTowel = false
+                        }
+                }) 
         }, 5000);
-        this.disableAddTowel = false;
-        console.log("Exit");
+        //this.disableAddTowel = false;
         this.TimeoutSubmitRecCreId =  RecCreId; //Assigning the Timeoutid to cancel the particular Timeout
         
     }
-    val;
+
+    //To Update Towel Inventory after towels are added
+    async TowelInvUpdation(TowParticularIdAndQtyForInv){
+        let Invupdrecs = 0;
+        for (const record of TowParticularIdAndQtyForInv){
+            const Invfield = {
+                Id : record.particular,
+                Quantity__c : record.quantity
+            };
+            await HandleUpdate(Invfield)
+            .then(result=>{
+                Invupdrecs++;
+                console.log("Invupdrecs",Invupdrecs);
+            })
+            .catch(error=>{
+                console.log(error);
+            })
+        }
+        console.log("return", Invupdrecs);
+        return Invupdrecs;
+    }
+    
     //Handling Addition of RawMaterials Details for current Date
     handleRawMaterialsSubmit(event){
         const rawmaterialsWOrWoDp = event.detail.rawmaterials;
         console.log("entered ")
+        
         //We have to process the list for duplicate values
         for (let i = 0;i < rawmaterialsWOrWoDp.length; i++) {
             let count = 0;
@@ -342,41 +390,60 @@ export default class WeaverWtDetails extends LightningElement {
         let RecCreId;                // Intialize a variable to Store the id of the timeout function to be executed
         RecCreId = setTimeout(() => {
             this.disableAddRawMat = true;       //To prevent queing of requests simultaneously
+            let RawMatCreatedAndUpdated = {RawMatCreated: 0,CurrentDateUpd: 0,AccountUpd: 0,InventoryUpd:0}
                 rawmaterials.forEach((record,index)=>{
                     const rawmat = this.RawMatDetails.find(Rawmat => Rawmat.RawMaterial === record.RawMaterial).RawMatId;           //Since RawMaterials__c is a lookup field so we store it as an id
-                    const fields = {
-                        TowelOrRawMaterialWeightId__c : this.CurrentDateRecId,
-                        RawMaterials__c : rawmat,
-                        RawMaterialWeight__c : record.RawMaterialWeight,
-                    };
+                    const rawmattype = this.RawMatDetails.find(Rawmat => Rawmat.RawMaterial === record.RawMaterial).RawMatType;
+                    let Deduc = 0;
+                    console.log("rawmattype",rawmattype);
+                    let fields
+                    if (rawmattype === 'Cone') {
+                        Deduc = parseFloat(record.RawMaterialWeight) * 5 ;            //Here 5 represents per kg deduction amount of cone
+                        console.log("Deduc",Deduc);
+                        fields = {
+                            TowelOrRawMaterialWeightId__c : this.CurrentDateRecId,
+                            RawMaterials__c : rawmat,
+                            RawMaterialWeight__c : record.RawMaterialWeight,
+                            DeductionAmtPerUnit__c : 5,
+                            Deduction__c : Deduc 
+                        };
+                    } else {
+                        fields = {
+                            TowelOrRawMaterialWeightId__c : this.CurrentDateRecId,
+                            RawMaterials__c : rawmat,
+                            RawMaterialWeight__c : record.RawMaterialWeight,
+                        };
+                    }
                     const recordInput = { apiName: 'TowelOrRawMaterialWeightDetail__c' , fields}
-                    this.CreateRecorc(recordInput)
+                    CreateRecorc(recordInput)
                     .then(result=>{ 
-                        const RawSubid = result.id;
+                        console.log("RawMaterial Record Created for "+(index+1));
+                        RawMatCreatedAndUpdated.RawMatCreated = parseFloat(RawMatCreatedAndUpdated.RawMatCreated) + 1;
                         console.log("fieldValue:",this.WtTypeFieldValue);     
                         const fieldValue = parseFloat(this.WtTypeFieldValue) + parseFloat(record.RawMaterialWeight);
                         this.WtTypeFieldValue = fieldValue;
                         console.log("fieldValue update:",fieldValue);
                         //Deduction updation
-                        const rawmattype = this.RawMatDetails.find(Rawmat => Rawmat.RawMaterial === record.RawMaterial).RawMatType;
-                        let Deduc = 0;
-                        console.log("rawmattype",rawmattype);
-                        if(rawmattype === 'Cone'){
-                            Deduc = parseFloat(record.RawMaterialWeight) * 5 ;            //Here 5 represents per kg deduction amount of cone
-                            console.log("Deduc",Deduc);
-                            const field = {
-                                Id : result.id,
-                                DeductionAmtPerUnit__c : 5,
-                                Deduction__c : Deduc 
-                            }
-                            this.HandleUpdate(field)
-                            .then(result =>{
-                                console.log("Deduction updated");
-                            })
-                            .catch(error =>{
-                                console.error("Deduction error",error);
-                            })
-                        }
+                        // const rawmattype = this.RawMatDetails.find(Rawmat => Rawmat.RawMaterial === record.RawMaterial).RawMatType;
+                        // let Deduc = 0;
+                        // console.log("rawmattype",rawmattype);
+                        // if(rawmattype === 'Cone'){
+                        //     Deduc = parseFloat(record.RawMaterialWeight) * 5 ;            //Here 5 represents per kg deduction amount of cone
+                        //     console.log("Deduc",Deduc);
+                        //     const field = {
+                        //         Id : result.id,
+                        //         DeductionAmtPerUnit__c : 5,
+                        //         Deduction__c : Deduc 
+                        //     }
+                        //     HandleUpdate(field)
+                        //     .then(result =>{
+                        //         console.log("Deduction updated");
+                        //     })
+                        //     .catch(error =>{
+                        //         console.error("Deduction error",error);
+                        //     })
+                        // }
+
                         //CurrentDate Record Updation
                         console.log("DaySpecificDeduction Before update:",this.DaySpecificDeduction);
                         this.DaySpecificDeduction = parseFloat(Deduc) + parseFloat(this.DaySpecificDeduction);
@@ -386,26 +453,30 @@ export default class WeaverWtDetails extends LightningElement {
                             [`DaySpecific${this.type}BalanceWt__c`] : fieldValue,
                             DaySpecificDeduction__c : this.DaySpecificDeduction
                         }
-                        this.HandleUpdate(CurDtRecFld)
+                        HandleUpdate(CurDtRecFld)
                         .then(result=>{
-                            console.log("CurrentDate Record Updated");
+                            console.log("CurrentDate Record Updated for "+(index+1));
+                            RawMatCreatedAndUpdated.CurrentDateUpd = parseFloat(RawMatCreatedAndUpdated.CurrentDateUpd) + 1;
+
                             //Account Updation
                             const Accfield = {
                                 Id : this.recordId,
                                 [`Pending_Wt_${this.type}__c`] : fieldValue,
                             };
-                            this.HandleUpdate(Accfield)
+                            HandleUpdate(Accfield)
                             .then(result=>{
-                                console.log("Account Updated");
+                                console.log("Account Updated for "+(index+1));
+                                RawMatCreatedAndUpdated.AccountUpd = parseFloat(RawMatCreatedAndUpdated.AccountUpd) + 1;
+
                                 //Raw Material Inventory updation
                                 const Invfield = {
                                     Id : record.RawMatId,
                                     Weight__c : parseFloat(record.SelectedRawMatWtAvailable) - parseFloat(record.RawMaterialWeight)
                                 };
-                                this.HandleUpdate(Invfield)
+                                HandleUpdate(Invfield)
                                 .then(result =>{
-                                    console.log("Inventory Updated");
-                                    
+                                    console.log("Inventory Updated for "+(index+1));
+                                    RawMatCreatedAndUpdated.InventoryUpd = parseFloat(RawMatCreatedAndUpdated.InventoryUpd) + 1;
                                         //  this.val = {
                                         //     Id : RawSubid,
                                         //     TowelOrRawMaterialWeightId__c : this.CurrentDateRecId,
@@ -440,74 +511,21 @@ export default class WeaverWtDetails extends LightningElement {
                     .catch(error=>{
                         console.error(error);
                     });
+                    if(index === rawmaterials.length - 1){
+                        if (RawMatCreatedAndUpdated.RawMatCreated === RawMatCreatedAndUpdated.CurrentDateUpd === RawMatCreatedAndUpdated.AccountUpd === RawMatCreatedAndUpdated.InventoryUpd === rawmaterials.length) {
+                            const message = "All RawMaterials are Added and CurrentDate,Account,Invenory Records are Updated";
+                            this.SuccessToastmsg(message);
+                        } else {
+                            const message = "Out of "+rawmaterials.length+" RawMaterials TowCreated "+RawMatCreatedAndUpdated.RawMatCreated+" CurrentDateUpd "+RawMatCreatedAndUpdated.CurrentDateUpd+" AccountUpd "+RawMatCreatedAndUpdated.AccountUpd+" InventoryUpd "+RawMatCreatedAndUpdated.InventoryUpd+" See Console for Detail ";
+                            this.WarningToastmsg(message);
+                        }
+                    }
                 });
             },5000);
             this.disableAddRawMat = false;
             console.log("Exit");
         this.TimeoutSubmitRecCreId =  RecCreId; //Assigning the Timeoutid to cancel the particular Timeout
-        
     }
-
-
-  
-
-    //Creation of record
-    CreateRecorc(recordInput){
-          return createRecord(recordInput)
-            .then(result=>{
-                this.dispatchEvent(new ShowToastEvent({
-                    title: "Info",
-                    message: `Record has been created`,
-                    variant: "info"
-                }));
-                return result;
-            })
-            .catch(error=>{
-                let errorMessage = 'Unknown error';
-                if (Array.isArray(error.body)) {
-                    errorMessage = error.body.map(e => e.message).join(', ');
-                } else if (typeof error.body.message === 'string') {
-                    errorMessage = error.body.message;
-                }
-                this.dispatchEvent(new ShowToastEvent({
-                    title: "Error",
-                    message: errorMessage,
-                    variant: "error"
-                }));
-                throw error;
-            });
-    }
-
-
-
-    //Handle Record Updation
-    HandleUpdate(fields){
-        const RecIp = {fields}
-       return updateRecord(RecIp)
-        .then(result=>{
-            this.dispatchEvent(new ShowToastEvent({
-                title: "Info",
-                message: `Updation Successful`,
-                variant: "info"
-            }));
-            return result;
-        })
-        .catch(error=>{
-            let errorMessage = 'Unknown error';
-                if (Array.isArray(error.body)) {
-                    errorMessage = error.body.map(e => e.message).join(', ');
-                } else if (typeof error.body.message === 'string') {
-                    errorMessage = error.body.message;
-                }
-                this.dispatchEvent(new ShowToastEvent({
-                    title: "Error",
-                    message: errorMessage,
-                    variant: "error"
-                }));
-                throw error;
-        });
-    }
-
 
     //Handling Undo Popup for creation of record
     triggerCancelSubmitRecCreation(){
@@ -523,12 +541,37 @@ export default class WeaverWtDetails extends LightningElement {
     }
     HandleCancelRecCreation(TimeoutRecCreId){
         clearTimeout(TimeoutRecCreId);
-        this.dispatchEvent(new ShowToastEvent({
-            title: 'Info',
-            message: `Record Creation has been canceled `,
-            varient : 'warning'
-        }));
+        const message = `Record Creation has been canceled `;
+        this.WarningToastmsg(message);
     }
 
+    //All Types of Toast messages
+    WarningToastmsg(message){
+        this.dispatchEvent(new ShowToastEvent({
+            title: "Warning",
+            message: message,
+            variant: "warning"
+        }))
+      }
+      SuccessToastmsg(message){
+        this.dispatchEvent(new ShowToastEvent({
+            title: "Info",
+            message: message,
+            variant: "info"
+        }));
+      }
+      ErrorToastmsg(error){
+        let errorMessage = 'Unknown error';
+              if (Array.isArray(error.body)) {
+                  errorMessage = error.body.map(e => e.message).join(', ');
+              } else if (typeof error.body.message === 'string') {
+                  errorMessage = error.body.message;
+              }
+              dispatchEvent(new ShowToastEvent({
+                  title: "Error",
+                  message: errorMessage,
+                  variant: "error"
+              }));
+      }
 
 }
