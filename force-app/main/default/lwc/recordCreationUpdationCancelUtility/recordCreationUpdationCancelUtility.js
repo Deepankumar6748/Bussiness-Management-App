@@ -11,16 +11,15 @@ export const CreateRecorc = (recordInput) => {
 }
 
 //Handle Record Updation
-export const HandleUpdate = (fields) => {
+export  const HandleUpdate = async (fields) => {
     const RecIp = {fields}
     console.log("Upation Entered")
-   return updateRecord(RecIp)
-    .then(result=>{
+    try {
+        const res = await updateRecord(RecIp)
         console.log("Record Updated");
-        return result;
-    })
-    .catch(error=>{
+        return res;
+    } catch (error) {
         console.error("Record not Updated");
-        throw error;
-    });
+        return  error;
+    }
 }
