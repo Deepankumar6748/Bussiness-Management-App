@@ -16,7 +16,7 @@ export default class WeaverDetails extends LightningElement  {
         if (data) {
             let records = JSON.parse(JSON.stringify(data));
             //console.log("records",JSON.stringify(records));
-            this.UnCalculatedWageDetails = records.filter(record => record.WageCalculated__c === false);
+            this.UnCalculatedWageDetails = records.filter(record => !record.WageCalculated__c);
             this.NormalWtDetails = records.filter(record => record.TowelWeightType__c === 'Normal');
             this.BlackWtDetails = records.filter(record => record.TowelWeightType__c === 'Black');
             this.WtDetails6666 = records.filter(record => record.TowelWeightType__c === '6666');

@@ -1,0 +1,39 @@
+<template>
+    <lightning-modal-header label="Calculated Salary"></lightning-modal-header>
+    <lightning-modal-body>
+        <lightning-card title="View Account Record">
+            <div class="slds-m-around_medium">
+    
+                <lightning-record-view-form
+                density="compact"
+                object-api-name="CalculateWage__c"
+                record-id={calculaterecid}
+                >
+                <div class="slds-grid slds-wrap slds-gutters">
+                    <table class="slds-table slds-table_bordered slds-table_cell-buffer slds-table_striped ">
+                        <thead>
+                            <tr>
+                                <th>CalculatedSalary</th>
+                                <th>PaidSalary</th>
+                                <th>BalanceSalary</th>
+                                <th>AmountPaid/Not</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><lightning-output-field field-name="CalculatedSalary__c" variant="label-hidden"></lightning-output-field></td>
+                                <td><lightning-output-field field-name="PaidSalary__c" variant="label-hidden"></lightning-output-field></td>
+                                <td><lightning-output-field field-name="BalanceSalary__c" variant="label-hidden"></lightning-output-field></td>
+                                <td><lightning-output-field field-name="AmountPaid__c" variant="label-hidden"></lightning-output-field></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </lightning-record-view-form>
+            </div>
+        </lightning-card>   
+    </lightning-modal-body>
+    <lightning-modal-footer>
+        <lightning-button label="Pay" style="padding: 10px;" variant="brand"   onclick={handleSubmit}></lightning-button>  
+    </lightning-modal-footer>
+</template>

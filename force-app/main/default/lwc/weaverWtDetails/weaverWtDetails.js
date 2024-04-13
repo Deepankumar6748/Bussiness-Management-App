@@ -505,7 +505,7 @@ export default class WeaverWtDetails extends LightningElement {
                             })
                         }
                         else{
-                            const message = "All RawMaterials Records are not created";
+                            const message = "All RawMaterials Records are not created "+response.message;
                             console.log(message);
                             this.WarningToastmsg(message);
                             this.disableAddRawMat = false;              
