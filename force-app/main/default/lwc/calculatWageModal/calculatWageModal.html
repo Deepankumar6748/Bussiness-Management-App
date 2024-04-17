@@ -13,6 +13,7 @@
                     <table class="slds-table slds-table_bordered slds-table_cell-buffer slds-table_striped ">
                         <thead>
                             <tr>
+                                <th>Date</th>
                                 <th>CalculatedSalary</th>
                                 <th>PaidSalary</th>
                                 <th>BalanceSalary</th>
@@ -21,6 +22,7 @@
                         </thead>
                         <tbody>
                             <tr>
+                                <td><lightning-output-field field-name="CalculationTime__c" variant="label-hidden"></lightning-output-field></td>
                                 <td><lightning-output-field field-name="CalculatedSalary__c" variant="label-hidden"></lightning-output-field></td>
                                 <td><lightning-output-field field-name="PaidSalary__c" variant="label-hidden"></lightning-output-field></td>
                                 <td><lightning-output-field field-name="BalanceSalary__c" variant="label-hidden"></lightning-output-field></td>
@@ -34,6 +36,6 @@
         </lightning-card>   
     </lightning-modal-body>
     <lightning-modal-footer>
-        <lightning-button label="Pay" style="padding: 10px;" variant="brand"   onclick={handleSubmit}></lightning-button>  
+        <lightning-button label="Done" style="padding: 10px;" variant="brand"   onclick={handleSubmit}></lightning-button>  
     </lightning-modal-footer>
 </template>

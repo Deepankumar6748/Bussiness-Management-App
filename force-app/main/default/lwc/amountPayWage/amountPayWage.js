@@ -54,9 +54,9 @@ export default class AmountPayWage extends LightningModal {
     }
     handleClickDone(){
         if(this.ModeOfPay && this.Amount > 0){
-            const event = new CustomEvent('submit', { detail: { modeofpay: this.ModeOfPay, amount: this.Amount } });
-            this.dispatchEvent(event);
-            this.close();
+                const event = new CustomEvent('submit', { detail: { modeofpay: this.ModeOfPay, amount: this.Amount } });
+                this.dispatchEvent(event);
+                this.close();
         }else{
             this.dispatchEvent(new ShowToastEvent({
                 title: "Warning",

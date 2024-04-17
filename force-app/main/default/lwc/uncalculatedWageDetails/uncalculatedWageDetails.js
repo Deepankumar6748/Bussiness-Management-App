@@ -35,7 +35,7 @@ export default class UncalculatedWageDetails extends LightningElement {
             AmountPayWage.open({
                 limitamount : limit,
                 onsubmit:(event)=>{
-                    this.handleExtAmountRecCreate(event);
+                    this.handleAmountPay(event);
                 }
             })
         }
@@ -47,55 +47,15 @@ export default class UncalculatedWageDetails extends LightningElement {
 
     }
 
-    handleExtAmountRecCreate(event){
-        this.isExtraAmtlimitReached = true;     //Here we disable the button to avoid continous clicks
-        this.IsUndopopover = true;
-        setTimeout(()=>{                        //Setting the timeout for Undo Popup
-            this.IsUndopopover = false;
-        },4500);
-        this.RecCreTimeoutId = setTimeout(() => {
-            const fields = {
-                AccountId__c : this.recordId,
-                Amount__c : event.detail.amount,
-                ModeOfPay__c : event.detail.modeofpay,
-                Type__c : "Wage"
-            }
-            const recordInput = { apiName: 'Amount__c' , fields}
-            CreateRecorc(recordInput)
-            .then(result=>{
-                const msg = "Amount Record Created";
-                console.log(msg);
-                this.SuccessToastmsg(msg);
-                this.isExtraAmtlimitReached = false;        //Here we enable the button after rec creation 
-                //Account Updation of Extra AmtWage
-                this.ExtraAmtWage = parseFloat(this.ExtraAmtWage) + parseFloat(event.detail.amount)
-                const Accfields = {
-                    Id:this.recordId,
-                    ExtraAmtWage__c : this.ExtraAmtWage
-                }
-                HandleUpdate(Accfields)
-                .then(result =>{
-                    const msg = "Account Record Updated";
-                    console.log(msg);
-                    this.SuccessToastmsg(msg);
-                })
-                .catch(error =>{
-                    console.log("Account updation Error",error);
-                    this.ErrorToastmsg(error);
-                })
-            })
-            .catch(error =>{
-                console.error("Amount Record Creation error:",error);
-                this.ErrorToastmsg(error);
-                this.isExtraAmtlimitReached = false;
-            })
-        }, 5000);
-    }
-
-    handleCalculateSalary(event){
-        console.log(JSON.stringify(this.wagedetails))
-        console.log(this.wagedetails.length);
+    async handleCalculateSalary(event){
+        //console.log(JSON.stringify(this.wagedetails))
+        //console.log(this.wagedetails.length);
         if(this.wagedetails.length !=0) {
+            this.IsUndopopover = true;
+            setTimeout(()=>{                        //Setting the timeout for Undo Popup
+                this.IsUndopopover = false;
+            },4500);
+            this.RecCreTimeoutId = setTimeout(async () => {
             this.isCalculatewage = true;
             let TotalWageCalc = 0;
             let TotalDeducCalc = 0;
@@ -111,56 +71,51 @@ export default class UncalculatedWageDetails extends LightningElement {
             if (TotalWageCalc > TotalDeducCalc) {
                 TotalSalaryCalc = parseFloat(TotalWageCalc) - parseFloat(TotalDeducCalc);
                 console.log("TotalSalaryCalc",TotalSalaryCalc)
+                let isCalculatewageRecCreated = false;
+                let isTowelOrRawMaterialWeightUpdated = false;
+                let isAccountUpdated = false;
                 //CalculateWage Record Creation
-                const fields = {CalculatedSalary__c: TotalSalaryCalc, BalanceSalary__c: TotalSalaryCalc, PaidSalary__c: 0}
-                const recordInput = {apiName: 'CalculateWage__c',fields}
-                CreateRecorc(recordInput)
+                // Get year, month, and day
+                const currentDate = new Date();
+                const formattedTime = currentDate.toISOString();
+                const CalculateWagefields = { 
+                        AccountId__c: this.recordId,
+                        CalculatedSalary__c: TotalSalaryCalc,
+                        CalculationTime__c: formattedTime,
+                        PaidSalary__c: 0
+                    };
+                //console.log("CalculateWagefields",JSON.stringify(CalculateWagefields));
+                let CalculatRecId;
+                const recordInput = {apiName: 'CalculateWage__c', fields:CalculateWagefields};
+                //console.log("recordInput",JSON.stringify(recordInput));
+                await CreateRecorc(recordInput)
                 .then(result =>{
-                    const CalculatRecId = result.id;
+                    isCalculatewageRecCreated = true;
+                    CalculatRecId = result.id;
                     console.log("CalculatRecId",CalculatRecId);
                     const message = "CalculateWage Record Created";
                     console.log(message);
                     console.log("result.id",result.id);
                     this.SuccessToastmsg(message);
+                })
+                .catch(error =>{
+                    console.error("CalculateWage Record Creation error:",error);
+                    this.ErrorToastmsg(error);
+                    this.isCalculatewage = false;
+                })
 
+                if (isCalculatewageRecCreated) {
                     //Daily Records Updation
                     Recfields.forEach(element => {
-                        element.WageCalculated__c = result.id;
+                        element.WageCalculated__c = CalculatRecId;
                     });
-                    UpdateTowelOrRawMaterialWeight({Records: Recfields})
+                    await UpdateTowelOrRawMaterialWeight({Records: Recfields})
                     .then(response =>{
                         if (response.isSuccess) {
+                            isTowelOrRawMaterialWeightUpdated = true;
                             const message = "Calculation Updated in Daily Records";
                             console.log(message);
                             //this.SuccessToastmsg(message);
-
-                            // Updation Salary
-                            this.TotalBalanceWage = parseFloat(this.TotalBalanceWage) + parseFloat(TotalSalaryCalc);
-                            const fields = {Id:this.recordId,SalaryBalance__c:this.TotalBalanceWage};
-                            HandleUpdate(fields)
-                            .then(result =>{
-                                const message = "Account Updated ";
-                                console.log(message);
-                                //this.SuccessToastmsg(message);
-                                //Cache Updation
-                                this.wagedetails = [];
-                                this.isCalculatewage = true;
-
-                                //Modal open
-                                CalculatWageModal.open(
-                                    {
-                                        calculaterecid : CalculatRecId,
-                                        onsubmit:(event)=>{
-                                            this.handleCalculateWagePay(event);
-                                        }
-                                    }
-                                )
-                            })
-                            .catch(error =>{
-                                const message = "Account Updation error ";
-                                console.error(message+error);
-                            })
-                            
                         } else {
                             const message = "Calculation Updation Error in Daily Records "+response.message;
                             console.log(message);
@@ -168,18 +123,44 @@ export default class UncalculatedWageDetails extends LightningElement {
                             this.isCalculatewage = false;
                         }
                     })
-                })
-                .catch(error =>{
-                    console.error("CalculateWage Record Creation error:",error);
-                    this.ErrorToastmsg(error);
-                    this.isCalculatewage = false;
-                })
+                }
+
+                if (isTowelOrRawMaterialWeightUpdated) {
+                    //Account Updation Salary
+                    this.TotalBalanceWage = parseFloat(this.TotalBalanceWage) + parseFloat(TotalSalaryCalc);
+                    const Accfields = {Id:this.recordId,SalaryBalance__c:this.TotalBalanceWage};
+                    await HandleUpdate(Accfields)
+                    .then(result =>{
+                        isAccountUpdated = true;
+                        const message = "Account Updated ";
+                        console.log(message);
+                        //this.SuccessToastmsg(message);
+                    })
+                    .catch(error =>{
+                        const message = "Account Updation error ";
+                        console.error(message+error);
+                    })
+                }
+
+                if (isAccountUpdated) {
+                    //Cache Updation
+                    this.wagedetails = [];
+                    this.isCalculatewage = true;
+
+                    //Modal open
+                    CalculatWageModal.open(
+                        {
+                            calculaterecid : CalculatRecId,
+                        }
+                    )
+                }
+
             } else {
                 const message = "Cannot Able to Calculate Wage Deduction greater than Wage"
                 this.WarningToastmsg(message);
                 this.isCalculatewage = false;
             }
-
+            },5000);
         }
         else {
             this.isCalculatewage = true;
@@ -187,34 +168,48 @@ export default class UncalculatedWageDetails extends LightningElement {
             console.log(message);
             this.WarningToastmsg(message);
         }
-        
-    }
-    handleCalculateWagePay(event){
-        const CalculateRecId = event.detail.recid;
-        AmountPayWage.open({
-            onsubmit:(event)=>{
-                this.handleAmountPay(event);
-            }
-        })
     }
     handleAmountPay(event){
+        this.isExtraAmtlimitReached = true;
         this.IsUndopopover = true;
         setTimeout(()=>{                        //Setting the timeout for Undo Popup
             this.IsUndopopover = false;
         },4500);
         this.RecCreTimeoutId = setTimeout(() => {
+            const currentDate = new Date();
+            const formattedTime = currentDate.toISOString();
             const fields = {
                 AccountId__c : this.recordId,
                 Amount__c : event.detail.amount,
+                AmountPaidTime__c : formattedTime,
                 ModeOfPay__c : event.detail.modeofpay,
                 Type__c : "Wage"
             }
             const recordInput = { apiName: 'Amount__c' , fields}
             CreateRecorc(recordInput)
             .then(result=>{
-                const msg = "Amount Record Created";
+                const msg = "Amount Paid Successfully : "+event.detail.amount;
                 console.log(msg);
                 this.SuccessToastmsg(msg);
+                this.isExtraAmtlimitReached = false;
+                    //Account Updation of Extra AmtWage
+                    this.ExtraAmtWage = parseFloat(this.ExtraAmtWage) + parseFloat(event.detail.amount)
+                    const Accfields = {
+                        Id:this.recordId,
+                        ExtraAmtWage__c : this.ExtraAmtWage,
+                        ExtraAmtWageId__c: result.id
+                    }
+                    HandleUpdate(Accfields)
+                    .then(result =>{
+                        const msg = "Account Record Updated";
+                        console.log(msg);
+                        this.SuccessToastmsg(msg);
+                    })
+                    .catch(error =>{
+                        console.log("Account updation Error",error);
+                        this.ErrorToastmsg(error);
+                    })
+                
             })
             .catch(error =>{
                 console.error("Amount Record Creation error:",error);

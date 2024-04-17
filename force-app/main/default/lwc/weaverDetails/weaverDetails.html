@@ -67,6 +67,9 @@
             <lightning-tab label="Uncalculated Wages" >
                 <c-uncalculated-wage-details -total-balance-wage={TotalBalanceWage}  wagedetails={UnCalculatedWageDetails} record-id={recordId} ></c-uncalculated-wage-details>
             </lightning-tab>
+            <lightning-tab label="Calculated Wages" >
+                <c-calculated-salary record-id={recordId} -total-balance-wage={TotalBalanceWage}></c-calculated-salary>
+            </lightning-tab>
         </lightning-tabset>
     </div>
 </template>
