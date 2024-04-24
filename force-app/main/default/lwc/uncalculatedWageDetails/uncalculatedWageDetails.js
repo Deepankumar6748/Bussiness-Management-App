@@ -1,8 +1,6 @@
 import { LightningElement,api,track,wire } from 'lwc';
 import AmountPayWage from 'c/amountPayWage';
 import { createRecord , getRecord} from 'lightning/uiRecordApi';
-import  EXTRA_AMOUNT from '@salesforce/schema/Account.ExtraAmtWage__c';
-import  EXTRA_AMOUNT_ID from '@salesforce/schema/Account.ExtraAmtWageId__c';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import CalculatWageModal from 'c/calculatWageModal';
 import {CreateRecorc,HandleUpdate} from 'c/recordCreationUpdationCancelUtility';
@@ -14,19 +12,9 @@ export default class UncalculatedWageDetails extends LightningElement {
     @track RecCreTimeoutId;
     @track isExtraAmtlimitReached;
     @track IsUndopopover = false;
-    @track ExtraAmtWage;
-    @track ExtraAmtWageId;
+    @api ExtraAmtWage;
+    @api ExtraAmtWageId;
     @track isCalculatewage;
-
-    @wire(getRecord, { recordId: "$recordId", fields: [EXTRA_AMOUNT,EXTRA_AMOUNT_ID] })      
-    wiredData({ error, data }) {
-        if (data) {
-            this.ExtraAmtWage = data.fields['ExtraAmtWage__c'].value;
-            this.ExtraAmtWageId = data.fields['ExtraAmtWageId__c'].value;
-        } else if (error) {
-            this.ErrorToastmsg(error);
-        }
-    }
 
     handleClickExtAmtWagePay(){
         //It pays the wage without calculating the salary it is added to ExtAmtWage in acc record
@@ -41,10 +29,24 @@ export default class UncalculatedWageDetails extends LightningElement {
         }
         else{
             this.isExtraAmtlimitReached = true;
-            const message = "Exta Amount Wage Limit Reached";
+            const message = "Extra Amount Wage Limit Reached";
             this.WarningToastmsg(message);
         }
 
+    }
+    @track iswagedetails;
+    renderedCallback(){
+       if (this.wagedetails != null) {
+            this.iswagedetails = true;
+       } else {
+            this.iswagedetails = false;
+       }
+
+       if (this.ExtraAmtWage < 5000) {
+            this.isExtraAmtlimitReached = false;
+       } else {
+        this.isExtraAmtlimitReached = true;
+       }
     }
 
     async handleCalculateSalary(event){
@@ -88,7 +90,7 @@ export default class UncalculatedWageDetails extends LightningElement {
                 let CalculatRecId;
                 const recordInput = {apiName: 'CalculateWage__c', fields:CalculateWagefields};
                 //console.log("recordInput",JSON.stringify(recordInput));
-                await CreateRecorc(recordInput)
+                await createRecord(recordInput)
                 .then(result =>{
                     isCalculatewageRecCreated = true;
                     CalculatRecId = result.id;
@@ -144,9 +146,10 @@ export default class UncalculatedWageDetails extends LightningElement {
 
                 if (isAccountUpdated) {
                     //Cache Updation
-                    this.wagedetails = [];
+                    this.wagedetails = null;
                     this.isCalculatewage = true;
-
+                    //To reflect the changes in calculated salary tab
+                    this.dispatchEvent(new CustomEvent("calculationchanges", {detail:{record: {Id:CalculatRecId,PaidSalary__c: 0,BalanceSalary__c: TotalSalaryCalc}}}));
                     //Modal open
                     CalculatWageModal.open(
                         {
@@ -186,7 +189,7 @@ export default class UncalculatedWageDetails extends LightningElement {
                 Type__c : "Wage"
             }
             const recordInput = { apiName: 'Amount__c' , fields}
-            CreateRecorc(recordInput)
+            createRecord(recordInput)
             .then(result=>{
                 const msg = "Amount Paid Successfully : "+event.detail.amount;
                 console.log(msg);

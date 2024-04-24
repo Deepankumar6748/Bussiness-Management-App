@@ -1,74 +1,81 @@
 <template>
     <div class="slds-box slds-m-around_small" style="font-weight: bold" >
-        <h3 class="slds-text-align_left">Total Wage Balance {TotalBalanceWage}</h3>
-        <h3 class="slds-text-align_right">Extra Amount in Wage {ExtraAmtWage}</h3>
+        <p class="slds-text-align_left">Total Wage Balance {TotalBalanceWage}</p>
+        <p class="slds-text-align_right">Extra Amount in Wage {ExtraAmtWage}</p>
     </div>
-    <div lwc:if={CalculateWagesRecords} class="slds-tabs_scoped__content " style="border: 1px solid #d8dde6;border-radius: 0.25rem;max-height: 300px;overflow-y: auto;">
-      <table class="slds-table slds-table_cell-buffer slds-table_bordred" border="1" >
-        <thead>
-          <tr class="slds-line-height_reset">
-            <th scope="col">
-              <div class="slds-truncate" title="Calculation Date">Calculation Date</div>
-            </th>
-            <th scope="col">
-              <div class="slds-truncate" title="Calculated Salary">Calculated Salary</div>
-            </th>
-            <th scope="col">
-              <div class="slds-truncate" title="Paid Salary">Paid Salary</div>
-            </th>
-            <th scope="col">
-              <div class="slds-truncate" title="Balance Salary">Balance Salary</div>
-            </th>
-            <th scope="col">
-              <div class="slds-truncate" title="Paid/Not Paid">Paid/Not Paid</div>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <template for:each={CalculateWagesRecords} for:item="CalculateWagesRecord">
-            <tr key={CalculateWagesRecord.Id}>
-              <th data-label="Calculation Date" scope="row">
-                <div class="slds-truncate">
-                  <a onclick={OpenCalculatedRecords}>
-                    <lightning-record-view-form density="compact"  object-api-name="CalculateWage__c"  record-id={CalculateWagesRecord.Id}>
-                      <lightning-output-field field-name="CalculationTime__c" variant="label-hidden"></lightning-output-field>
-                    </lightning-record-view-form>
-                  </a>
-                </div>
+    <div lwc:if={CalculateWagesRecords}>
+      <div class="slds-tabs_scoped__content " style="border: 1px solid #d8dde6;border-radius: 0.25rem;max-height: 300px;overflow-y: auto;">
+        <table class="slds-table slds-table_cell-buffer slds-table_bordred" border="1" >
+          <thead>
+            <tr class="slds-line-height_reset">
+              <th scope="col">
+                <div class="slds-truncate" title="Calculation Date">Calculation Date</div>
               </th>
-              <td data-label="Calculated Salary">
-                <div class="slds-truncate">
-                  <lightning-record-view-form density="compact"  object-api-name="CalculateWage__c"  record-id={CalculateWagesRecord.Id}>
-                    <lightning-output-field field-name="CalculatedSalary__c" variant="label-hidden"></lightning-output-field>
-                  </lightning-record-view-form>
-                </div>
-              </td>
-              <td data-label="Paid Salary">
-                <div class="slds-truncate">
-                  <lightning-record-view-form density="compact"  object-api-name="CalculateWage__c" record-id={CalculateWagesRecord.Id}>
-                    <lightning-output-field field-name="PaidSalary__c" variant="label-hidden"></lightning-output-field>
-                  </lightning-record-view-form>
-                </div>
-              </td>
-              <td data-label="Balance Salary">
-                <div class="slds-truncate">
-                  <lightning-record-view-form density="compact"  object-api-name="CalculateWage__c"  record-id={CalculateWagesRecord.Id}>
-                    <lightning-output-field field-name="BalanceSalary__c" variant="label-hidden"></lightning-output-field>
-                  </lightning-record-view-form>
-                </div>
-              </td>
-              <td data-label="Paid/Not Paid">
-                <div class="slds-truncate">
-                  <lightning-record-view-form density="compact"  object-api-name="CalculateWage__c"  record-id={CalculateWagesRecord.Id}>
-                    <lightning-output-field field-name="AmountPaid__c" variant="label-hidden"></lightning-output-field>
-                  </lightning-record-view-form>
-                </div>
-              </td>
+              <th scope="col">
+                <div class="slds-truncate" title="Calculated Salary">Calculated Salary</div>
+              </th>
+              <th scope="col">
+                <div class="slds-truncate" title="Paid Salary">Paid Salary</div>
+              </th>
+              <th scope="col">
+                <div class="slds-truncate" title="Balance Salary">Balance Salary</div>
+              </th>
+              <th scope="col">
+                <div class="slds-truncate" title="Paid/Not Paid">Paid/Not Paid</div>
+              </th>
             </tr>
-          </template>
-        </tbody>
-      </table>
-      <lightning-button-group class="slds-align_absolute-center">
+          </thead>
+          <tbody>
+            <template for:each={CalculateWagesRecords} for:item="CalculateWagesRecord">
+              <tr key={CalculateWagesRecord.Id}>
+                <th data-label="Calculation Date" scope="row">
+                  <div class="slds-truncate">
+                    <lightning-button 
+                      variant="base"
+                      label="Details" 
+                      onclick={handleShowdetails}
+                      data-calcid={CalculateWagesRecord.Id}
+                       
+                    >  </lightning-button>
+                      <lightning-record-view-form density="compact"  object-api-name="CalculateWage__c"  record-id={CalculateWagesRecord.Id}>
+                        <lightning-output-field field-name="CalculationTime__c" variant="label-hidden"></lightning-output-field>
+                      </lightning-record-view-form>
+                  </div>
+                </th>
+                <td data-label="Calculated Salary">
+                  <div class="slds-truncate">
+                    <lightning-record-view-form density="compact"  object-api-name="CalculateWage__c"  record-id={CalculateWagesRecord.Id}>
+                      <lightning-output-field field-name="CalculatedSalary__c" variant="label-hidden"></lightning-output-field>
+                    </lightning-record-view-form>
+                  </div>
+                </td>
+                <td data-label="Paid Salary">
+                  <div class="slds-truncate">
+                    <lightning-record-view-form density="compact"  object-api-name="CalculateWage__c" record-id={CalculateWagesRecord.Id}>
+                      <lightning-output-field field-name="PaidSalary__c" variant="label-hidden"></lightning-output-field>
+                    </lightning-record-view-form>
+                  </div>
+                </td>
+                <td data-label="Balance Salary">
+                  <div class="slds-truncate">
+                    <lightning-record-view-form density="compact"  object-api-name="CalculateWage__c"  record-id={CalculateWagesRecord.Id}>
+                      <lightning-output-field field-name="BalanceSalary__c" variant="label-hidden"></lightning-output-field>
+                    </lightning-record-view-form>
+                  </div>
+                </td>
+                <td data-label="Paid/Not Paid">
+                  <div class="slds-truncate">
+                    <lightning-record-view-form density="compact"  object-api-name="CalculateWage__c"  record-id={CalculateWagesRecord.Id}>
+                      <lightning-output-field field-name="AmountPaid__c" variant="label-hidden"></lightning-output-field>
+                    </lightning-record-view-form>
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+      <lightning-button-group disabled ={isDisableButtons} class="slds-align_absolute-center">
         <lightning-button class="slds-m-around_medium "  label="Pay Wage" disabled={isdisablePayWage} onclick={handleClickPayWage}  variant="brand" style="padding: 10px; border-radius: 2%;"></lightning-button>
         <lightning-button class="slds-m-around_medium "  label="Pay Wage-ExtraAmt" disabled={isdisablePayWageExtraAmt} onclick={handleClickPayWageExtraAmt}  variant="brand" style="padding: 10px; border-radius: 2%;"></lightning-button>
       </lightning-button-group>

@@ -3,7 +3,7 @@
         <h3>Total Wage Balance: {TotalBalanceWage}</h3>
         <h3>Extra Amount in Wage: {ExtraAmtWage}</h3>
     </div>
-    <div lwc:if={wagedetails}>
+    <div lwc:if={iswagedetails}>
         <div class="slds-tabs_scoped__content " style="border: 1px solid #d8dde6;border-radius: 0.25rem;max-height: 300px;overflow-y: auto;">
             <template  for:each={wagedetails} for:item="WageDetail">
                 <lightning-card class="" key={WageDetail.Id} title={WageDetail.Date__c}>   

@@ -11,7 +11,7 @@
                         <lightning-tab label="Normal" >
                             <!--If there is  records in Normal the below content is displayed-->
                             <div if:true={NormalWtDetails}>
-                                <c-weaver-wt-details wtdetails={NormalWtDetails} record-id={recordId}  type="Normal"></c-weaver-wt-details>
+                                <c-weaver-wt-details wtdetails={NormalWtDetails} record-id={recordId} onupdatelistparent = {handleUpdateListUncalcParent} onupdatelistchild = {handleUpdateListUncalcChild} type="Normal"></c-weaver-wt-details>
                             </div>
                             <!--If there is no records in Normal the below content is displayed-->
                             <template if:false={NormalWtDetails}>
@@ -30,7 +30,7 @@
                             
                             <!--If there is  records in Black the below content is displayed-->
                             <div if:true={BlackWtDetails}>
-                                <c-weaver-wt-details wtdetails={BlackWtDetails} record-id={recordId}  type="Black"></c-weaver-wt-details>
+                                <c-weaver-wt-details wtdetails={BlackWtDetails} record-id={recordId} onupdatelistparent = {handleUpdateListUncalcParent} onupdatelistchild = {handleUpdateListUncalcChild} type="Black"></c-weaver-wt-details>
                             </div>
                             <!--If there is no records in Black the below content is displayed-->
                             <template if:false={BlackWtDetails}>
@@ -48,7 +48,7 @@
                             
                             <!--If there is  records in 6666 the below content is displayed-->
                             <div if:true={WtDetails6666}>
-                                <c-weaver-wt-details wtdetails={WtDetails6666} record-id={recordId} type="6666"></c-weaver-wt-details>
+                                <c-weaver-wt-details wtdetails={WtDetails6666} record-id={recordId} onupdatelistparent = {handleUpdateListUncalcParent} onupdatelistchild = {handleUpdateListUncalcChild} type="6666"></c-weaver-wt-details>
                             </div>
                             <!--If there is no records in 6666 the below content is displayed-->
                             <template if:false={WtDetails6666}>
@@ -65,10 +65,10 @@
                 
             </lightning-tab>
             <lightning-tab label="Uncalculated Wages" >
-                <c-uncalculated-wage-details -total-balance-wage={TotalBalanceWage}  wagedetails={UnCalculatedWageDetails} record-id={recordId} ></c-uncalculated-wage-details>
+                <c-uncalculated-wage-details -total-balance-wage={TotalBalanceWage} -extra-amt-wage-id={ExtraAmtWageId} -extra-amt-wage={ExtraAmtWage} oncalculationchanges={handleCalculationChanges} wagedetails={UnCalculatedWageDetails} record-id={recordId} ></c-uncalculated-wage-details>
             </lightning-tab>
             <lightning-tab label="Calculated Wages" >
-                <c-calculated-salary record-id={recordId} -total-balance-wage={TotalBalanceWage}></c-calculated-salary>
+                <c-calculated-salary record-id={recordId} -extra-amt-wage-id={ExtraAmtWageId} -extra-amt-wage={ExtraAmtWage} -calculate-wages-records={CalculateWagesRecords} -total-balance-wage={TotalBalanceWage}></c-calculated-salary>
             </lightning-tab>
         </lightning-tabset>
     </div>

@@ -1,6 +1,9 @@
 import { LightningElement,api,track,wire } from 'lwc';
+import getCalculateWages from '@salesforce/apex/getrecords.getCalculateWages';
 import { createRecord,getRecord, getFieldValue, updateRecord } from 'lightning/uiRecordApi';
-import SALARY_BALANCE from '@salesforce/schema/Account.SalaryBalance__c'
+import SALARY_BALANCE from '@salesforce/schema/Account.SalaryBalance__c';
+import  EXTRA_AMOUNT from '@salesforce/schema/Account.ExtraAmtWage__c';
+import  EXTRA_AMOUNT_ID from '@salesforce/schema/Account.ExtraAmtWageId__c';
 import getRecordsTowOrRawMatWt from '@salesforce/apex/WeaverRecordDetails.getRecordsTowOrRawMatWt';
 export default class WeaverDetails extends LightningElement  {
     @api recordId;
@@ -9,7 +12,10 @@ export default class WeaverDetails extends LightningElement  {
     @track BlackWtDetails;
     @track WtDetails6666;
     @track TotalBalanceWage;
+    @track ExtraAmtWage;
+    @track ExtraAmtWageId;
     @track UnCalculatedWageDetails;
+    @track CalculateWagesRecords;
 
     @wire(getRecordsTowOrRawMatWt,{recordId: '$recordId'})
     wiredTowOrRawMatWt({ error, data }) {
@@ -25,12 +31,68 @@ export default class WeaverDetails extends LightningElement  {
             console.error(error);
         }
 
-    }     
+    }   
+    //For CalculatedSalary tab
+    @wire(getCalculateWages,{recordId : "$recordId"})
+    CalculateWagesRec({error, data}) {
+        if (data) {
+            // TODO: Error handling
+            let records = JSON.parse(JSON.stringify(data));
+            this.CalculateWagesRecords = records;
+            console.log("GetCalculateWagesRec Success");
+        } else if (error) {
+            // TODO: Data 
+            console.error("getCalculateWages error",error);
+            this.ErrorToastmsg(error);
+        }
+    }
+    //Reflect changes in calculated salary tab
+    handleCalculationChanges(event){
+        this.template.querySelector('c-weaver-wt-details').calcutionfinished();
+        this.CalculateWagesRecords.unshift(event.detail.record);
+        console.log("changes updated in  calculated salary");
+    }
 
-    @wire(getRecord, { recordId: "$recordId", fields: [SALARY_BALANCE] })      
+    handleUpdateListUncalcParent(event){
+        this.UnCalculatedWageDetails = [...this.UnCalculatedWageDetails,event.detail.record]
+    }
+
+    handleUpdateListUncalcChild(event){
+        console.log("handleUpdateListUncalcChild entered",JSON.stringify(event.detail));
+        try {
+            event.detail.records.forEach(element => {
+                this.UnCalculatedWageDetails.find(record => record.Id === event.detail.recid).TowelOrRawMaterialWeightDetails__r.push(element);
+            });
+        } catch (error) {
+            console.error("updatechild error",error)
+            let errorMessage = 'Unknown error';
+                if (Array.isArray(error.body)) {
+                    errorMessage = error.body.map(e => e.message).join(', ');
+                } else if (typeof error.body.message === 'string') {
+                    errorMessage = error.body.message;
+                }
+                this.dispatchEvent(new ShowToastEvent({
+                    title: "Error",
+                    message: errorMessage,
+                    variant: "error"
+                }));
+
+        }
+        if(event.detail.dayspecificdeduction){
+            this.UnCalculatedWageDetails.find(record => record.Id === event.detail.recid).DaySpecificDeduction__c = event.detail.dayspecificdeduction;
+        }
+        else if(event.detail.dayspecificwage){
+            this.UnCalculatedWageDetails.find(record => record.Id === event.detail.recid).DaySpecificWage__c = event.detail.dayspecificwage;
+        }
+        
+    }
+
+    @wire(getRecord, { recordId: "$recordId", fields: [SALARY_BALANCE,EXTRA_AMOUNT,EXTRA_AMOUNT_ID] })      
     wiredData({ error, data }) {
         if (data) {
             this.TotalBalanceWage = data.fields['SalaryBalance__c'].value;
+            this.ExtraAmtWage = data.fields['ExtraAmtWage__c'].value;
+            this.ExtraAmtWageId = data.fields['ExtraAmtWageId__c'].value;
         } else if (error) {
             let errorMessage = 'Unknown error';
                 if (Array.isArray(error.body)) {

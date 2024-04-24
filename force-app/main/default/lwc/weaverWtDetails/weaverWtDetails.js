@@ -57,14 +57,22 @@ export default class WeaverWtDetails extends LightningElement {
                         this.DaySpecificWage = record.DaySpecificWage__c;
                         this.DaySpecificDeduction = record.DaySpecificDeduction__c;
                     } else {
-                        this.disableCreate = true;
-                        this.disableAddRawMat = true;
-                        this.disableAddTowel = true;
+                        this.calcutionfinished();
                     }
                 }
             });
         }
+        this.wtdetails = JSON.parse(JSON.stringify(this.wtdetails));
     }
+
+    //To stop adding towel or rawmaterials after calculation on that day
+    @api calcutionfinished(){
+        this.disableCreate = true;
+        this.disableAddRawMat = true;
+        this.disableAddTowel = true;
+    }
+
+
     //To get the Current Account Details for Updating and using of the fields to maintain the weight balance and all related field values updation 
     @wire(getRecord, { recordId: "$recordId", fields: [NORMAL_FIELD,BLACK_FIELD,PATANI_FIELD] })      //WtType
     wiredData({ error, data }) {
@@ -168,6 +176,7 @@ export default class WeaverWtDetails extends LightningElement {
                         TowelWeightType__c : this.type
                     };
                     this.wtdetails = [...this.wtdetails,newrec];
+                    this.dispatchEvent(new CustomEvent("updatelistparent", {detail :{record : newrec}}));
                 })
                 .catch(error =>{
                     this.disableCreate = false;         //If there is any error then the button is restored
@@ -329,18 +338,29 @@ export default class WeaverWtDetails extends LightningElement {
                                         }
 
                                         //Cache Updation
-                                        // try {
-                                        //     console.log("this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r Before",JSON.stringify(this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r));
-                                        //     //JSON.parse("JSON.stringify(this.wtdetails)",JSON.parse(JSON.stringify(this.wtdetails)));
-                                        //     TowelRecords.forEach(element => {
-                                        //         console.log("element",element)
-                                        //         this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r.push(element)
-                                        //     });
-                                        //     console.log("this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r After",JSON.stringify(this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r));
-                                        // } catch (error) {
-                                        //     console.error("cache error",JSON.parse(JSON.stringify(error)));
-                                        //     this.ErrorToastmsg(error);
-                                        // }
+                                            console.log("this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r Before",JSON.stringify(this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r));
+                                            //console.log("JSON.stringify(this.wtdetails)",JSON.parse(JSON.stringify(this.wtdetails)));
+                                            if (!this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r) {
+                                                console.log("Entered no TowelOrRawMaterialWeightDetails__r")
+                                                this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId)['TowelOrRawMaterialWeightDetails__r'] = [];
+                                            }
+                                            TowelRecords.forEach(element => {
+                                                console.log("cnt");
+                                                try {
+                                                    this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r.push(element);    
+                                                } catch (error) {
+                                                        console.error("cache error",JSON.parse(error));
+                                                        this.ErrorToastmsg(error);
+                                                    }
+                                            });
+                                            this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId)[`DaySpecific${this.type}BalanceWt__c`] = this.WtTypeFieldValue;
+                                            console.log("this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r After",JSON.stringify(this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r));
+                                        try {
+                                            this.dispatchEvent(new CustomEvent("updatelistchild", {detail :{records : TowelRecords, recid : this.CurrentDateRecId, dayspecificwage: this.DaySpecificWage}}));
+                                            console.log("dispatched in submit Towels")
+                                        } catch (error) {
+                                            console.error("dispatched in submit Towels error ",error);
+                                        }
                                     })
                                     .catch(error =>{
                                         console.error(error);
@@ -513,7 +533,31 @@ export default class WeaverWtDetails extends LightningElement {
                                             }));
                                             this.disableAddRawMat = false;
                                         }
-                                                                                      
+
+                                        //Cache Updation
+                                        console.log("this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r Before",JSON.stringify(this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r));
+                                        //console.log("JSON.stringify(this.wtdetails)",JSON.parse(JSON.stringify(this.wtdetails)));
+                                        if (!this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r) {
+                                            console.log("Entered no TowelOrRawMaterialWeightDetails__r")
+                                            this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId)['TowelOrRawMaterialWeightDetails__r'] = [];
+                                        }
+                                        RawMatRecords.forEach(element => {
+                                            try {
+                                                this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r.push(element);
+                                                this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId)[`DaySpecific${this.type}BalanceWt__c`] = this.WtTypeFieldValue;
+                                            } catch (error) {
+                                                    console.error("cache error",JSON.parse(error));
+                                                    this.ErrorToastmsg(error);
+                                                }
+                                        });
+                                        console.log("this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r After",JSON.stringify(this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r));
+                                        
+                                         try{
+                                            this.dispatchEvent(new CustomEvent("updatelistchild", {detail :{records : RawMatRecords, recid : this.CurrentDateRecId, dayspecificdeduction: this.DaySpecificDeduction}}));
+                                            console.log("dispatched in submit Towels")
+                                        } catch (error) {
+                                            console.error("dispatched in submit Towels error ",error);
+                                        }                                            
                                     })
                                     .catch(error =>{
                                         console.error("Towel Inventory Updation error",error);

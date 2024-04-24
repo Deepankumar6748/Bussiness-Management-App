@@ -1,0 +1,94 @@
+<template>
+      <lightning-modal-header label="Calculation Details"></lightning-modal-header>
+      <lightning-modal-body>
+            <div class="slds-tabs_scoped__content " style="border: 1px solid #d8dde6;border-radius: 0.25rem;max-height: 300px;overflow-y: auto;">
+                <template  for:each={Calculationdetails} for:item="Calculationdetail">
+                    <lightning-card class="" key={Calculationdetail.Id}>   
+                        <h1> <lightning-record-view-form density="compact" record-id={Calculationdetail.Id} object-api-name="TowelOrRawMaterialWeight__c" >
+                          <lightning-output-field field-name="Date__c" variant="label-hidden"></lightning-output-field>
+                        </lightning-record-view-form> </h1>
+                        <table class="slds-table slds-table_cell-buffer  slds-table_bordered slds-scrollable slds-table_col-bordered slds-scrollable_x" style="min-width: 100px;">
+                            <thead>
+                                <tr class="slds-line-height_reset">
+                                    <th scope="col">
+                                        <div class="slds-truncate" title="Partculars">Particulars</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-truncate" title="Quantity/RawMatWeight">Quantity/<br>RawMatWt</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-truncate" title="TowelWagePerUnit/DeductionAmtPerUnit">TowelWagePerUnit/<br>DedAmtPerUnit</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-truncate" title="Subtotal">Subtotal</div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={Calculationdetail.TowelOrRawMaterialWeightDetails__r} for:item="Details">
+                                    <tr key={Details.Id} class="slds-hint-parent">
+                                        <td data-label="Partculars">
+                                            <div class="slds-truncate">
+                                                <lightning-record-view-form record-id={Details.RawMaterials__c} object-api-name="RawMaterialInventory__c">
+                                                    <lightning-output-field field-name="Name" variant="label-hidden"> </lightning-output-field>
+                                                </lightning-record-view-form>
+                                            </div>
+                                            <div class="slds-truncate">
+                                                <lightning-record-view-form record-id={Details.Particulars__c} object-api-name="TowelsInventory__c">
+                                                    <lightning-output-field field-name="Name" variant="label-hidden"> </lightning-output-field>
+                                                </lightning-record-view-form>
+                                            </div>
+                                        </td>
+                                        <td data-label="Quantity/Weight">
+                                            <div if:true={Details.Particulars__c} class="slds-truncate">
+                                                <lightning-record-view-form record-id={Details.Id} object-api-name="TowelOrRawMaterialWeightDetail__c">
+                                                    <lightning-output-field field-name="Quantity__c" variant="label-hidden"> </lightning-output-field>
+                                                </lightning-record-view-form>
+                                            </div>
+                                            <div if:true={Details.RawMaterials__c} class="slds-truncate" style="background-color: rgb(243, 243, 162);">
+                                                <lightning-record-view-form record-id={Details.Id} object-api-name="TowelOrRawMaterialWeightDetail__c">
+                                                    <lightning-output-field field-name="RawMaterialWeight__c" variant="label-hidden"> </lightning-output-field>
+                                                </lightning-record-view-form>
+                                            </div>
+                                        </td>
+                                        <td data-label="TowelWagePerUnit/DeductionAmtPerUnit">
+                                            <div if:true={Details.Particulars__c} class="slds-truncate">
+                                                <lightning-record-view-form record-id={Details.Id} object-api-name="TowelOrRawMaterialWeightDetail__c">
+                                                    <lightning-output-field field-name="TowelWagePerUnit__c" variant="label-hidden"> </lightning-output-field>
+                                                </lightning-record-view-form>
+                                            </div>
+                                            <div if:true={Details.RawMaterials__c} class="slds-truncate" style="background-color: rgb(243, 243, 162);">
+                                                <lightning-record-view-form record-id={Details.Id} object-api-name="TowelOrRawMaterialWeightDetail__c">
+                                                    <lightning-output-field field-name="DeductionAmtPerUnit__c" variant="label-hidden"> </lightning-output-field>
+                                                </lightning-record-view-form>
+                                            </div>
+                
+                                        </td>
+                                        <td data-label="Subtotal">
+                                            <div if:true={Details.Particulars__c} class="slds-truncate">
+                                                <lightning-record-view-form record-id={Details.Id} object-api-name="TowelOrRawMaterialWeightDetail__c">
+                                                    <lightning-output-field field-name="Wage__c" variant="label-hidden"> </lightning-output-field>
+                                                </lightning-record-view-form>
+                                            </div>
+                                            <div if:true={Details.RawMaterials__c} class="slds-truncate" style="background-color: rgb(243, 243, 162);">
+                                                <lightning-record-view-form record-id={Details.Id} object-api-name="TowelOrRawMaterialWeightDetail__c">
+                                                    <lightning-output-field field-name="Deduction__c" variant="label-hidden"> </lightning-output-field>
+                                                </lightning-record-view-form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                        <p slot="footer" style="font-weight: bold">
+                            Day Specfic Wage: <lightning-record-view-form density="compact" object-api-name="TowelOrRawMaterialWeight__c" record-id={Calculationdetail.Id}>
+                                <lightning-output-field field-name="DaySpecificWage__c" variant="label-hidden"></lightning-output-field>
+                              </lightning-record-view-form>  Day Specific Deduction: <lightning-record-view-form density="compact" object-api-name="TowelOrRawMaterialWeight__c" record-id={Calculationdetail.Id}>
+                                <lightning-output-field field-name="DaySpecificDeduction__c" variant="label-hidden"></lightning-output-field>
+                              </lightning-record-view-form> 
+                        </p>
+                    </lightning-card>
+                </template>
+            </div>
+      </lightning-modal-body>
+</template>
