@@ -3,6 +3,7 @@ import LightningModal from 'lightning/modal';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 export default class AddTowModal extends LightningModal {
     @api towparticularslist;
+    @api balancewtavailable;
     @track towels = [{id: 1,Particulars:'',Quantity: 0,TowelWeight: 0}];
     @track id = 1;
     
@@ -38,14 +39,22 @@ export default class AddTowModal extends LightningModal {
             variant: "warning"
         }));
     } else {
-        let total = 0;
-        this.towels.forEach(value=>{
-            total+= parseFloat(value.TowelWeight);
-        });
-        console.log(total);
-        const event = new CustomEvent('submit', { detail: { towels: this.towels, total: total } });
-        this.dispatchEvent(event);
-        this.close();
+            let total = 0;
+            this.towels.forEach(value=>{
+                total+= parseFloat(value.TowelWeight);
+            });
+            console.log(total);
+        if (total <= this.balancewtavailable) {
+            const event = new CustomEvent('submit', { detail: { towels: this.towels, total: total } });
+            this.dispatchEvent(event);
+            this.close();
+        } else {
+            this.dispatchEvent(new ShowToastEvent({
+                title: "Warning",
+                message: "Towel Weight is higher than the Rawwmaterial",
+                variant: "warning"
+            }));
+        }
     }
 }
 

@@ -1,65 +1,75 @@
 <template>
-    <div class="slds-tabs_scoped__content ">
-        <template  for:each={wtdetails} for:item="WtDetail">
-            <!--For Each Parent Record A Card is created and details are displayed-->
-            <lightning-card class="" key={WtDetail.Id} title={WtDetail.Date__c}>
-                
-                <table class="slds-table slds-table_cell-buffer slds-no-row-hover " border="1.0">
-                    <thead>
-                        <tr class="slds-line-height_reset">
-                            <th scope="col">
-                                <div class="slds-truncate" title="Partculars">Particulars</div>
-                            </th>
-                            <th scope="col">
-                                <div class="slds-truncate" title="Quantity">Quantity</div>
-                            </th>
-                            <th scope="col">
-                                <div class="slds-truncate" title="Weight">Weight</div>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <template for:each={WtDetail.TowelOrRawMaterialWeightDetails__r} for:item="Details">
-                            <tr key={Details.Id} class="slds-hint-parent">
-                                <td data-label="Partculars">
-                                    <div class="slds-truncate" if:true={Details.RawMaterials__c} title={Details.RawMaterials__c} style="border-color: black;"><lightning-record-view-form
-                                        record-id={Details.RawMaterials__c}
-                                        object-api-name="RawMaterialInventory__c"
-                                        
-                                    >
-                                    <lightning-output-field field-name="Name" variant="label-hidden"> </lightning-output-field>
-                                    </lightning-record-view-form></div>
-                                    <div class="slds-truncate" if:true={Details.Particulars__c} title={Details.Particulars__c}><lightning-record-view-form
-                                        record-id={Details.Particulars__c}
-                                        object-api-name="TowelsInventory__c"
-                                    >
-                                    <lightning-output-field field-name="Name" variant="label-hidden"> </lightning-output-field>
-                                    </lightning-record-view-form></div>
-                                </td>
-                                <td data-label="Quantity">
-                                    <div class="slds-truncate" if:true={Details.Quantity__c} title={Details.Quantity__c}>{Details.Quantity__c}</div>
-                                </td>
-                                <td data-label="Weight">
-                                    <div class="slds-truncate" if:true={Details.TowelWeight__c} title={Details.TowelWeight__c}>{Details.TowelWeight__c}</div>
-                                    <div class="slds-truncate" if:true={Details.RawMaterialWeight__c} title={Details.RawMaterialWeight__c}>{Details.RawMaterialWeight__c}</div>
-                                </td>
+    <div lwc:if={iswtdetails}>
+        <div class="slds-tabs_scoped__content ">
+            <template  for:each={wtdetails} for:item="WtDetail">
+                <!--For Each Parent Record A Card is created and details are displayed-->
+                <lightning-card class="" key={WtDetail.Id} title={WtDetail.Date__c}>
+                    
+                    <table class="slds-table slds-table_cell-buffer slds-no-row-hover " border="1.0">
+                        <thead>
+                            <tr class="slds-line-height_reset">
+                                <th scope="col">
+                                    <div class="slds-truncate" title="Partculars">Particulars</div>
+                                </th>
+                                <th scope="col">
+                                    <div class="slds-truncate" title="Quantity">Quantity</div>
+                                </th>
+                                <th scope="col">
+                                    <div class="slds-truncate" title="Weight">Weight</div>
+                                </th>
                             </tr>
-                        </template>
-                    </tbody>
-                </table>
-                <div class="slds-box slds-text-align_center slds-m-around_small" style="font-weight: bold" >
-                    <div  if:true={WtDetail.DaySpecificNormalBalanceWt__c} > <h3>Balance Weight: {WtDetail.DaySpecificNormalBalanceWt__c}</h3></div>
-                    <div  if:true={WtDetail.DaySpecificBlackBalanceWt__c} > <h3>Balance Weight: {WtDetail.DaySpecificBlackBalanceWt__c}</h3></div>
-                    <div  if:true={WtDetail.DaySpecific6666BalanceWt__c} > <h3>Balance Weight: {WtDetail.DaySpecific6666BalanceWt__c}</h3></div>
-                </div>
-            </lightning-card>
-            
-        </template>
+                        </thead>
+                        <tbody>
+                            <template for:each={WtDetail.TowelOrRawMaterialWeightDetails__r} for:item="Details">
+                                <tr key={Details.Id} class="slds-hint-parent">
+                                    <td data-label="Partculars">
+                                        <div class="slds-truncate" if:true={Details.RawMaterials__c} title={Details.RawMaterials__c} style="border-color: black;"><lightning-record-view-form
+                                            record-id={Details.RawMaterials__c}
+                                            object-api-name="RawMaterialInventory__c"
+                                            
+                                        >
+                                        <lightning-output-field field-name="Name" variant="label-hidden"> </lightning-output-field>
+                                        </lightning-record-view-form></div>
+                                        <div class="slds-truncate" if:true={Details.Particulars__c} title={Details.Particulars__c}><lightning-record-view-form
+                                            record-id={Details.Particulars__c}
+                                            object-api-name="TowelsInventory__c"
+                                        >
+                                        <lightning-output-field field-name="Name" variant="label-hidden"> </lightning-output-field>
+                                        </lightning-record-view-form></div>
+                                    </td>
+                                    <td data-label="Quantity">
+                                        <div class="slds-truncate" if:true={Details.Quantity__c} title={Details.Quantity__c}>{Details.Quantity__c}</div>
+                                    </td>
+                                    <td data-label="Weight">
+                                        <div class="slds-truncate" if:true={Details.TowelWeight__c} title={Details.TowelWeight__c}>{Details.TowelWeight__c}</div>
+                                        <div class="slds-truncate" if:true={Details.RawMaterialWeight__c} title={Details.RawMaterialWeight__c}>{Details.RawMaterialWeight__c}</div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                    <div class="slds-box slds-text-align_center slds-m-around_small" style="font-weight: bold" >
+                        <div  if:true={WtDetail.DaySpecificNormalBalanceWt__c} > <h3>Balance Weight: {WtDetail.DaySpecificNormalBalanceWt__c}</h3></div>
+                        <div  if:true={WtDetail.DaySpecificBlackBalanceWt__c} > <h3>Balance Weight: {WtDetail.DaySpecificBlackBalanceWt__c}</h3></div>
+                        <div  if:true={WtDetail.DaySpecific6666BalanceWt__c} > <h3>Balance Weight: {WtDetail.DaySpecific6666BalanceWt__c}</h3></div>
+                    </div>
+                </lightning-card>
+                
+            </template>
+        </div>
+        
+        <div class="slds-text-align_center " style="padding: 10px; " >
+                <lightning-button variant="success" label="Add RawMaterial" title="Add RawMaterial" onclick={handleClickAddRawMat} disabled={disableAddRawMat} style="padding-right: 7px;"></lightning-button>
+                <lightning-button variant="success" label="Add Towel" title="Add Towel" onclick={handleClickAddTow} disabled={disableAddTowel} style="padding-left: 7px;"></lightning-button>
+        </div>
     </div>
-    
-    <div class="slds-text-align_center " style="padding: 10px; " >
-            <lightning-button variant="success" label="Add RawMaterial" title="Add RawMaterial" onclick={handleClickAddRawMat} disabled={disableAddRawMat} style="padding-right: 7px;"></lightning-button>
-            <lightning-button variant="success" label="Add Towel" title="Add Towel" onclick={handleClickAddTow} disabled={disableAddTowel} style="padding-left: 7px;"></lightning-button>
+    <div lwc:else>
+        <div style="height: auto;">
+            <div class="slds-text-align_center">
+                <!--Add RawMaterial Button-->
+                <lightning-button variant="success" label="Add RawMaterial" title="Add RawMaterial" onclick={handleClickAddRawMat} disabled={disableAddRawMat} style="padding-right: 7px;"></lightning-button>
+            </div>
+        </div>
     </div>
     <lightning-button label="Create Date" onclick={handleClickCreateRec} disabled={disableCreate} variant="brand" style="padding: 10px; border-radius: 2%;"  ></lightning-button>
     <!--Popup for Undo CurrentDate Record Creation-->

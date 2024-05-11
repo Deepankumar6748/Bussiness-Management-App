@@ -5,6 +5,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import CalculationdetailsModal from 'c/calculationdetailsModal';
 export default class CalculatedSalary extends LightningElement {
     @api CalculateWagesRecords;
+    @track isCalculateWagesRecords;
     @api recordId;
     @api TotalBalanceWage;
     @track isdisablePayWage;
@@ -14,14 +15,11 @@ export default class CalculatedSalary extends LightningElement {
     @api ExtraAmtWageId;
     
     renderedCallback(){
-
-        if(this.ExtraAmtWage === 0){
-            this.isdisablePayWageExtraAmt = true;
-            this.isdisablePayWage = false;
+        if(this.CalculateWagesRecords.length == 0){
+            this.isCalculateWagesRecords = false;
         }
         else{
-            this.isdisablePayWageExtraAmt = false;
-            this.isdisablePayWage = true;
+            this.isCalculateWagesRecords = true;
         }
     }
     connectedCallback(){
@@ -29,11 +27,12 @@ export default class CalculatedSalary extends LightningElement {
     }
     //Handling payWage button
     handleClickPayWage(event){
-        this.isDisableButtons = true;
+        this.isdisablePayWage = true;
         if (this.ExtraAmtWage === 0) {
             AmountPayWage.open({
-                onsubmit:(event)=>{
-                    this.handleAmountPay(event);
+                onsubmit:async (event)=>{
+                    await this.handleAmountPay(event);
+                    this.isdisablePayWage = false;
                 }
             })
         } else {
@@ -46,10 +45,11 @@ export default class CalculatedSalary extends LightningElement {
     }
 
     //Handling PayWageExtraAmt button
-    handleClickPayWageExtraAmt(){
-        this.isDisableButtons = true;
+    async handleClickPayWageExtraAmt(){
+        this.isdisablePayWageExtraAmt = true;
         if (this.ExtraAmtWage > 0) {
-            this.AllocateAmount(this.ExtraAmtWage,this.ExtraAmtWageId,true);
+            await this.AllocateAmount(this.ExtraAmtWage,this.ExtraAmtWageId,true);
+            this.isdisablePayWageExtraAmt = false;
         } else {
             this.isdisablePayWageExtraAmt = true;
             this.isdisablePayWage = false;
@@ -119,7 +119,7 @@ export default class CalculatedSalary extends LightningElement {
 
             if (isAmountRecCreated) {
                 console.log("AmountPaid",AmountPaid);
-                this.AllocateAmount(AmountPaid,AmountPaidId,false);
+                await this.AllocateAmount(AmountPaid,AmountPaidId,false);
             }
 
         },5000);  

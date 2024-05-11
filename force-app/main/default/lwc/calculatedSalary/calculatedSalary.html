@@ -3,7 +3,7 @@
         <p class="slds-text-align_left">Total Wage Balance {TotalBalanceWage}</p>
         <p class="slds-text-align_right">Extra Amount in Wage {ExtraAmtWage}</p>
     </div>
-    <div lwc:if={CalculateWagesRecords}>
+    <div lwc:if={isCalculateWagesRecords}>
       <div class="slds-tabs_scoped__content " style="border: 1px solid #d8dde6;border-radius: 0.25rem;max-height: 300px;overflow-y: auto;">
         <table class="slds-table slds-table_cell-buffer slds-table_bordred" border="1" >
           <thead>
@@ -81,7 +81,7 @@
       </lightning-button-group>
     </div>
     <div lwc:else class="slds-tabs_scoped__content " style="border: 1px solid #d8dde6;border-radius: 0.25rem;height: 250px;">
-      <div class="slds-align_absolute-center">No Records</div>
+      <div class="slds-align_absolute-center">Calculate Salary !</div>
     </div>
     <section if:true={IsUndopopover} aria-describedby="dialog-body-id-112" aria-labelledby="dialog-heading-id-117" class="slds-popover slds-nubbib_left slds-popover_full-width" role="dialog" style="margin: 15px; background-color:rgb(33, 240, 85) ">
       <div class="slds-popover__header ">Calculation is being Done!    <lightning-button label="Undo" onclick={triggerCancelAmountRecCreation}></lightning-button></div>

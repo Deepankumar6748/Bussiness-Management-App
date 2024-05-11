@@ -36,17 +36,16 @@ export default class UncalculatedWageDetails extends LightningElement {
     }
     @track iswagedetails;
     renderedCallback(){
-       if (this.wagedetails != null) {
+       if (this.wagedetails.length > 0) {
             this.iswagedetails = true;
        } else {
             this.iswagedetails = false;
        }
 
-       if (this.ExtraAmtWage < 5000) {
-            this.isExtraAmtlimitReached = false;
-       } else {
-        this.isExtraAmtlimitReached = true;
-       }
+    //    if (this.ExtraAmtWage > 5000) {
+    //         this.isExtraAmtlimitReached = true;
+    //    }
+
     }
 
     async handleCalculateSalary(event){

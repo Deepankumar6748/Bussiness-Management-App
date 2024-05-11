@@ -8,28 +8,43 @@ import getRecordsTowOrRawMatWt from '@salesforce/apex/WeaverRecordDetails.getRec
 export default class WeaverDetails extends LightningElement  {
     @api recordId;
     //For  Weight Details part
-    @track NormalWtDetails;
-    @track BlackWtDetails;
-    @track WtDetails6666;
+    @track NormalWtDetails = [];
+    @track BlackWtDetails = [];
+    @track WtDetails6666 = [];
     @track TotalBalanceWage;
     @track ExtraAmtWage;
     @track ExtraAmtWageId;
-    @track UnCalculatedWageDetails;
-    @track CalculateWagesRecords;
+    @track UnCalculatedWageDetails = [];
+    @track CalculateWagesRecords = [];
 
     @wire(getRecordsTowOrRawMatWt,{recordId: '$recordId'})
-    wiredTowOrRawMatWt({ error, data }) {
+    wiredTowOrRawMatWt({data}){
         if (data) {
-            let records = JSON.parse(JSON.stringify(data));
-            //console.log("records",JSON.stringify(records));
-            this.UnCalculatedWageDetails = records.filter(record => !record.WageCalculated__c && record.TowelOrRawMaterialWeightDetails__r);
-            this.NormalWtDetails = records.filter(record => record.TowelWeightType__c === 'Normal');
-            this.BlackWtDetails = records.filter(record => record.TowelWeightType__c === 'Black');
-            this.WtDetails6666 = records.filter(record => record.TowelWeightType__c === '6666');
+            const{isSuccess, isNull, message, Records} = data;
+            if(isSuccess){
+                if(!isNull){
+                    let records = JSON.parse(JSON.stringify(Records));
+                    //console.log("records",JSON.stringify(records));
+                    this.UnCalculatedWageDetails = records.filter(record => !record.WageCalculated__c && record.TowelOrRawMaterialWeightDetails__r);
+                    this.NormalWtDetails = records.filter(record => record.TowelWeightType__c === 'Normal');
+                    this.BlackWtDetails = records.filter(record => record.TowelWeightType__c === 'Black');
+                    this.WtDetails6666 = records.filter(record => record.TowelWeightType__c === '6666');
+                    console.log("No null records");
+                }
+                else{
+                    console.log("Null records");
+                }
+            }
+            else{
+                
+                console.log("response.Records",Records);
+                console.log("getRecordsTowOrRawMatWt Error"+message);
+            }
+
+
+            
         }
-         else if (error) {
-            console.error(error);
-        }
+         
 
     }   
     //For CalculatedSalary tab
@@ -55,13 +70,19 @@ export default class WeaverDetails extends LightningElement  {
 
     handleUpdateListUncalcParent(event){
         this.UnCalculatedWageDetails = [...this.UnCalculatedWageDetails,event.detail.record]
+        console.log("this.UnCalculatedWageDetails",this.UnCalculatedWageDetails);
     }
 
     handleUpdateListUncalcChild(event){
         console.log("handleUpdateListUncalcChild entered",JSON.stringify(event.detail));
         try {
+            if(!this.UnCalculatedWageDetails.find(record => record.Id === event.detail.recid).TowelOrRawMaterialWeightDetails__r){
+                console.log("Entered no TowelOrRawMaterialWeightDetails__r")
+                this.UnCalculatedWageDetails.find(record => record.Id === event.detail.recid)['TowelOrRawMaterialWeightDetails__r'] = [];
+            }
             event.detail.records.forEach(element => {
                 this.UnCalculatedWageDetails.find(record => record.Id === event.detail.recid).TowelOrRawMaterialWeightDetails__r.push(element);
+                console.log("this.UnCalculatedWageDetails updated")
             });
         } catch (error) {
             console.error("updatechild error",error)

@@ -33,11 +33,12 @@ export default class WeaverWtDetails extends LightningElement {
     @track TowelDetails;
     @track DaySpecificWage ;
     @track DaySpecificDeduction;
+    @track iswtdetails;
 
     connectedCallback(){
         this.WtTypeField = `Pending_Wt_${this.type}__c`;    //By recognizing the weight type we assign the WtTypeField for accessing the values
         console.log("WtTypeField:",this.WtTypeField);
-        console.log("wtdetails:",this.wtdetails);
+        console.log("wtdetails:",JSON.stringify(this.wtdetails));
         const currentDate = new Date();
         // Get year, month, and day
         const year = currentDate.getFullYear();
@@ -45,7 +46,7 @@ export default class WeaverWtDetails extends LightningElement {
         const day = String(currentDate.getDate()).padStart(2, '0');
         // Format date as YYYY-MM-DD
          this.formattedDate = `${year}-${month}-${day}`;
-        if (this.wtdetails != null) {
+        if (this.wtdetails.length > 0) {
             this.wtdetails.forEach(record =>{
                 const recordDate = record.Date__c;
                 if(recordDate === this.formattedDate){            // We check if there is record already  created for the current date
@@ -61,8 +62,18 @@ export default class WeaverWtDetails extends LightningElement {
                     }
                 }
             });
+            this.wtdetails = JSON.parse(JSON.stringify(this.wtdetails)); 
         }
-        this.wtdetails = JSON.parse(JSON.stringify(this.wtdetails));
+        
+    }
+
+    renderedCallback(){
+        if(this.wtdetails.length == 0){
+            this.iswtdetails = false;
+        }
+        else{
+            this.iswtdetails = true; 
+        }
     }
 
     //To stop adding towel or rawmaterials after calculation on that day
@@ -193,6 +204,7 @@ export default class WeaverWtDetails extends LightningElement {
             AddTowModal.open(
                 {
                 towparticularslist : this.TowParticularsList,
+                balancewtavailable : this.WtTypeFieldValue,
                 onsubmit:(event)=>{
                     this.handleTowelsSubmit(event);
                 }
@@ -537,6 +549,7 @@ export default class WeaverWtDetails extends LightningElement {
                                         //Cache Updation
                                         console.log("this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r Before",JSON.stringify(this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r));
                                         //console.log("JSON.stringify(this.wtdetails)",JSON.parse(JSON.stringify(this.wtdetails)));
+                                        //If there is no child record then we have to initialize it
                                         if (!this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId).TowelOrRawMaterialWeightDetails__r) {
                                             console.log("Entered no TowelOrRawMaterialWeightDetails__r")
                                             this.wtdetails.find(rec => rec.Id === this.CurrentDateRecId)['TowelOrRawMaterialWeightDetails__r'] = [];
@@ -601,10 +614,10 @@ export default class WeaverWtDetails extends LightningElement {
             .then(result=>{
                 Responseresult.UpdInd.push(index);      //for cache updation to update the available raw materials
                 Responseresult.Invupdrecs++;
-                console.log("Invupdrecs",Invupdrecs);
+                console.log("Invupdrecs",Responseresult.Invupdrecs);
             })
             .catch(error=>{
-                console.log("await HandleUpdate",error);
+                console.error(" HandleUpdate error",error);
             })
         }
         console.log("return", Responseresult.Invupdrecs);
